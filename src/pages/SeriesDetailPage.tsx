@@ -25,33 +25,59 @@ const SeriesDetailPage = () => {
   const mockSeries = !isXtreamId ? getSeries().find(s => s.id === id) : null;
   const allSeries = getSeries().filter(s => s.id !== id);
 
+  interface NormalizedSeries {
+    id: string;
+    title: string;
+    poster: string;
+    backdrop: string;
+    description: string;
+    genre: string[];
+    rating: number;
+    year: number;
+    seasons: { number: number; episodes: { id: string; number: number; title: string; description: string; duration: number; thumbnail: string; streamUrl: string; container_extension?: string; epId?: string }[] }[];
+    cast?: string[];
+    director?: string;
+  }
+
   // Build series data
-  const series = isXtreamMode && seriesInfo ? {
-    id: id || '',
-    title: seriesInfo.info?.name || 'Series',
-    poster: seriesInfo.info?.cover || '',
-    backdrop: seriesInfo.info?.backdrop_path?.[0] || seriesInfo.info?.cover || '',
-    description: seriesInfo.info?.plot || '',
-    genre: seriesInfo.info?.genre?.split(',').map(g => g.trim()) || [],
-    rating: parseFloat(seriesInfo.info?.rating || '0') || 0,
-    year: parseInt(seriesInfo.info?.releaseDate?.substring(0, 4) || '2024'),
-    cast: seriesInfo.info?.cast?.split(',').map(c => c.trim()) || [],
-    director: seriesInfo.info?.director || '',
-    seasons: Object.keys(seriesInfo.episodes || {}).map(seasonNum => ({
-      number: parseInt(seasonNum),
-      episodes: (seriesInfo.episodes[seasonNum] || []).map(ep => ({
-        id: ep.id,
-        number: ep.episode_num,
-        title: ep.title || ep.info?.name || `Episode ${ep.episode_num}`,
-        description: ep.info?.plot || '',
-        duration: ep.info?.duration_secs ? Math.floor(ep.info.duration_secs / 60) : parseInt(ep.info?.duration || '0') || 0,
-        thumbnail: ep.info?.movie_image || '',
-        streamUrl: '',
-        container_extension: ep.container_extension,
-        epId: ep.id,
+  let series: NormalizedSeries | null = null;
+  
+  if (isXtreamMode && seriesInfo) {
+    series = {
+      id: id || '',
+      title: seriesInfo.info?.name || 'Series',
+      poster: seriesInfo.info?.cover || '',
+      backdrop: seriesInfo.info?.backdrop_path?.[0] || seriesInfo.info?.cover || '',
+      description: seriesInfo.info?.plot || '',
+      genre: seriesInfo.info?.genre?.split(',').map(g => g.trim()) || [],
+      rating: parseFloat(seriesInfo.info?.rating || '0') || 0,
+      year: parseInt(seriesInfo.info?.releaseDate?.substring(0, 4) || '2024'),
+      cast: seriesInfo.info?.cast?.split(',').map(c => c.trim()) || [],
+      director: seriesInfo.info?.director || '',
+      seasons: Object.keys(seriesInfo.episodes || {}).map(seasonNum => ({
+        number: parseInt(seasonNum),
+        episodes: (seriesInfo.episodes[seasonNum] || []).map(ep => ({
+          id: ep.id,
+          number: ep.episode_num,
+          title: ep.title || ep.info?.name || `Episode ${ep.episode_num}`,
+          description: ep.info?.plot || '',
+          duration: ep.info?.duration_secs ? Math.floor(ep.info.duration_secs / 60) : parseInt(ep.info?.duration || '0') || 0,
+          thumbnail: ep.info?.movie_image || '',
+          streamUrl: '',
+          container_extension: ep.container_extension,
+          epId: ep.id,
+        })),
+      })).sort((a, b) => a.number - b.number),
+    };
+  } else if (mockSeries) {
+    series = {
+      ...mockSeries,
+      seasons: mockSeries.seasons.map(s => ({
+        ...s,
+        episodes: s.episodes.map(e => ({ ...e })),
       })),
-    })).sort((a, b) => a.number - b.number),
-  } : mockSeries;
+    };
+  }
 
   if (loading) {
     return (
