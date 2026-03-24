@@ -5,6 +5,7 @@ import { t } from '@/lib/i18n';
 import { getChannels, getMovies, getSeries } from '@/lib/mockData';
 import { storage } from '@/lib/storage';
 import ContentCard from '@/components/ContentCard';
+import TrailerPreview from '@/components/TrailerPreview';
 import ContentRow from '@/components/ContentRow';
 import HeroSlider from '@/components/HeroSlider';
 
@@ -46,27 +47,17 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen pb-8">
-      {/* Hero Slider */}
       <HeroSlider movies={filteredMovies} />
 
-      {/* Category cards matching reference design */}
       <section className="px-6 -mt-16 relative z-10 mb-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-6xl mx-auto">
-          {/* Live TV Card */}
-          <div
-            onClick={() => navigate('/live')}
-            className="glass-card-hover p-6 cursor-pointer relative overflow-hidden group"
-          >
+          <div onClick={() => navigate('/live')} className="glass-card-hover p-6 cursor-pointer relative overflow-hidden group">
             <div className="absolute top-0 left-0 right-0 h-1 bg-primary rounded-t-lg" />
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-display text-xl font-bold text-primary mb-3">
-                  {t('home.liveTV', language)}
-                </h3>
+                <h3 className="font-display text-xl font-bold text-primary mb-3">{t('home.liveTV', language)}</h3>
                 <p className="text-2xl font-bold">+{filteredChannels.length} {t('home.channels', language)}</p>
-                <p className="text-xs text-muted-foreground line-through mt-1">
-                  {filteredChannels.length + 20} {t('home.channels', language)}
-                </p>
+                <p className="text-xs text-muted-foreground line-through mt-1">{filteredChannels.length + 20} {t('home.channels', language)}</p>
               </div>
               <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Tv className="w-7 h-7 text-primary" />
@@ -74,20 +65,12 @@ const HomePage = () => {
             </div>
           </div>
 
-          {/* Movies Card */}
-          <div
-            onClick={() => navigate('/movies')}
-            className="glass-card-hover p-6 cursor-pointer relative overflow-hidden group"
-          >
+          <div onClick={() => navigate('/movies')} className="glass-card-hover p-6 cursor-pointer relative overflow-hidden group">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-display text-xl font-bold mb-3">
-                  {t('home.movies', language)}
-                </h3>
+                <h3 className="font-display text-xl font-bold mb-3">{t('home.movies', language)}</h3>
                 <p className="text-2xl font-bold">+{filteredMovies.length} Movies</p>
-                <p className="text-xs text-muted-foreground line-through mt-1">
-                  {filteredMovies.length + 30} Movies
-                </p>
+                <p className="text-xs text-muted-foreground line-through mt-1">{filteredMovies.length + 30} Movies</p>
               </div>
               <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Film className="w-7 h-7 text-primary" />
@@ -95,20 +78,12 @@ const HomePage = () => {
             </div>
           </div>
 
-          {/* Series Card */}
-          <div
-            onClick={() => navigate('/series')}
-            className="glass-card-hover p-6 cursor-pointer relative overflow-hidden group"
-          >
+          <div onClick={() => navigate('/series')} className="glass-card-hover p-6 cursor-pointer relative overflow-hidden group">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-display text-xl font-bold mb-3">
-                  {t('home.series', language)}
-                </h3>
+                <h3 className="font-display text-xl font-bold mb-3">{t('home.series', language)}</h3>
                 <p className="text-2xl font-bold">+{series.length} Series</p>
-                <p className="text-xs text-muted-foreground line-through mt-1">
-                  {series.length + 15} Series
-                </p>
+                <p className="text-xs text-muted-foreground line-through mt-1">{series.length + 15} Series</p>
               </div>
               <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <MonitorPlay className="w-7 h-7 text-primary" />
@@ -118,7 +93,6 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Status bar matching reference */}
       <div className="flex items-center justify-between px-6 mb-8 max-w-6xl mx-auto text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse" />
@@ -132,7 +106,6 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* Surprise Me */}
       <div className="px-6 mb-10 max-w-6xl mx-auto">
         <button
           onClick={handleSurprise}
@@ -143,7 +116,6 @@ const HomePage = () => {
         </button>
       </div>
 
-      {/* Continue Watching */}
       {continueMovies.length > 0 && (
         <ContentRow title={t('home.continueWatching', language)}>
           {continueMovies.map(m => m && (
@@ -157,22 +129,20 @@ const HomePage = () => {
         </ContentRow>
       )}
 
-      {/* Trending */}
+      {/* Trending - with trailer preview */}
       <ContentRow title={t('home.trending', language)} onSeeAll={() => navigate('/movies')}>
-        {trending.map(m => <ContentCard key={m.id} item={m} type="movie" size="lg" />)}
+        {trending.map(m => <TrailerPreview key={m.id} item={m} type="movie" size="lg" />)}
       </ContentRow>
 
-      {/* Recommended */}
+      {/* Recommended - with trailer preview */}
       <ContentRow title={t('home.recommended', language)}>
-        {recommended.map(m => <ContentCard key={m.id} item={m} type="movie" />)}
+        {recommended.map(m => <TrailerPreview key={m.id} item={m} type="movie" />)}
       </ContentRow>
 
-      {/* Series */}
       <ContentRow title={t('home.series', language)} onSeeAll={() => navigate('/series')}>
-        {series.map(s => <ContentCard key={s.id} item={s} type="series" />)}
+        {series.map(s => <TrailerPreview key={s.id} item={s} type="series" />)}
       </ContentRow>
 
-      {/* Recently Watched */}
       {recentMovies.length > 0 && (
         <ContentRow title={t('home.recentlyWatched', language)}>
           {recentMovies.map(m => m && (

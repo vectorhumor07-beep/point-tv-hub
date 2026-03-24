@@ -1,7 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Tv, Film, MonitorPlay, Search, Heart, Settings, Globe, Monitor, CreditCard, Clock } from 'lucide-react';
+import { Home, Tv, Film, MonitorPlay, Search, Heart, Settings, Globe, Monitor, CreditCard, Clock, Rewind } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { t } from '@/lib/i18n';
+import NotificationSystem from '@/components/NotificationSystem';
 import pointtvLogo from '@/assets/pointtv-logo.jpg';
 
 const Header = () => {
@@ -14,6 +15,7 @@ const Header = () => {
     { to: '/movies', icon: Film, label: t('nav.movies', language) },
     { to: '/series', icon: MonitorPlay, label: t('nav.series', language) },
     { to: '/epg', icon: Clock, label: 'EPG' },
+    { to: '/catchup', icon: Rewind, label: 'Catch-up' },
     { to: '/multiscreen', icon: Monitor, label: 'Multi-Screen' },
     { to: '/search', icon: Search, label: t('nav.search', language) },
     { to: '/favorites', icon: Heart, label: t('nav.favorites', language) },
@@ -51,6 +53,8 @@ const Header = () => {
             <Globe className="w-4 h-4" />
             {language.toUpperCase()}
           </button>
+
+          <NotificationSystem />
 
           <Link to="/subscription" className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-secondary transition-colors" title={language === 'tr' ? 'Abonelik' : 'Subscription'}>
             <CreditCard className="w-4 h-4" />
