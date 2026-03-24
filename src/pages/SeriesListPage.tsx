@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { t } from '@/lib/i18n';
 import ContentCard from '@/components/ContentCard';
-import { MonitorPlay, LayoutGrid, Loader2 } from 'lucide-react';
+import { MonitorPlay, LayoutGrid } from 'lucide-react';
+import BufferingScreen from '@/components/BufferingScreen';
 import { getSeries } from '@/lib/mockData';
 import { useXtreamSeries } from '@/hooks/useXtreamData';
 
@@ -38,11 +39,7 @@ const SeriesListPage = () => {
       : series;
 
   if (loading) {
-    return (
-      <div className="min-h-screen pt-20 flex items-center justify-center">
-        <Loader2 className="w-10 h-10 text-primary animate-spin" />
-      </div>
-    );
+    return <BufferingScreen loading={loading} type="series" />;
   }
 
   return (

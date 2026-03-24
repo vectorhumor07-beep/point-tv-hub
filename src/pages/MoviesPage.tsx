@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { t } from '@/lib/i18n';
 import ContentCard from '@/components/ContentCard';
-import { Film, LayoutGrid, Loader2 } from 'lucide-react';
+import { Film, LayoutGrid } from 'lucide-react';
+import BufferingScreen from '@/components/BufferingScreen';
 import { getMovies } from '@/lib/mockData';
 import { useXtreamVod } from '@/hooks/useXtreamData';
 
@@ -43,11 +44,7 @@ const MoviesPage = () => {
       : movies;
 
   if (loading) {
-    return (
-      <div className="min-h-screen pt-20 flex items-center justify-center">
-        <Loader2 className="w-10 h-10 text-primary animate-spin" />
-      </div>
-    );
+    return <BufferingScreen loading={loading} type="movie" />;
   }
 
   return (

@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { t } from '@/lib/i18n';
 import { useNavigate } from 'react-router-dom';
-import { Play, Star, Radio, Signal, LayoutGrid, Loader2 } from 'lucide-react';
+import { Play, Star, Radio, Signal, LayoutGrid } from 'lucide-react';
+import BufferingScreen from '@/components/BufferingScreen';
 import { ChannelCategory } from '@/lib/types';
 import { getChannels } from '@/lib/mockData';
 import { useXtreamLive } from '@/hooks/useXtreamData';
@@ -53,11 +54,7 @@ const LiveTVPage = () => {
     : channels.filter(c => c.category === activeCategory);
 
   if (loading) {
-    return (
-      <div className="min-h-screen pt-20 flex items-center justify-center">
-        <Loader2 className="w-10 h-10 text-primary animate-spin" />
-      </div>
-    );
+    return <BufferingScreen loading={loading} type="live" />;
   }
 
   return (
