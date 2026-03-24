@@ -1,7 +1,10 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useRef, useEffect, useState } from 'react';
 import { getMovies } from '@/lib/mockData';
 import { useApp } from '@/context/AppContext';
-import { Play, Star, Plus, Heart, Clock, Calendar, User, Film, Check, ArrowLeft } from 'lucide-react';
+import { Play, Star, Plus, Heart, Clock, Calendar, User, Film, Check, ArrowLeft, Volume2, VolumeX } from 'lucide-react';
+
+const TRAILER_URL = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
 
 const MovieDetailPage = () => {
   const { id } = useParams();
@@ -9,6 +12,9 @@ const MovieDetailPage = () => {
   const { watchlist, toggleWatchlist, favorites, toggleFavorite } = useApp();
   const movies = getMovies();
   const movie = movies.find(m => m.id === id);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [trailerMuted, setTrailerMuted] = useState(true);
+  const [trailerLoaded, setTrailerLoaded] = useState(false);
 
   if (!movie) return (
     <div className="min-h-screen pt-20 flex items-center justify-center text-muted-foreground">Film bulunamadı</div>
