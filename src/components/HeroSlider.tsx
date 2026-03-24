@@ -86,22 +86,35 @@ const HeroSlider = ({ movies }: HeroSliderProps) => {
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* Background images with Ken Burns effect */}
+      {/* Background trailers with fallback images */}
       {featured.map((m, i) => (
         <div
           key={m.id}
           className="absolute inset-0 transition-opacity duration-1000"
           style={{ opacity: i === current ? 1 : 0 }}
         >
+          {/* Fallback poster image */}
           <img
             src={heroBackgrounds[i % heroBackgrounds.length]}
             alt=""
-            className={`w-full h-full object-cover transition-transform duration-[7000ms] ease-linear ${
-              i === current ? 'scale-110' : 'scale-100'
+            className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ${
+              videoLoaded[i] && i === current ? 'opacity-0' : 'opacity-100'
             }`}
-            width={1920}
-            height={800}
           />
+          {/* Trailer video */}
+          {m.trailerUrl && (
+            <video
+              ref={el => { videoRefs.current[i] = el; }}
+              src={m.trailerUrl}
+              muted={isMuted}
+              loop
+              playsInline
+              onCanPlay={() => setVideoLoaded(prev => ({ ...prev, [i]: true }))}
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+                videoLoaded[i] && i === current ? 'opacity-100' : 'opacity-0'
+              }`}
+            />
+          )}
           {/* Gradient overlays */}
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/20" />
@@ -111,6 +124,14 @@ const HeroSlider = ({ movies }: HeroSliderProps) => {
 
       {/* Top gradient vignette */}
       <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-background/60 to-transparent z-[5]" />
+
+      {/* Mute toggle */}
+      <button
+        onClick={() => setIsMuted(!isMuted)}
+        className="absolute top-6 right-6 z-30 p-2.5 rounded-full glass-card hover:bg-foreground/10 transition-all border border-border/30"
+      >
+        {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+      </button>
 
       {/* Content */}
       <div className="absolute inset-0 flex items-end pb-28 px-6 md:px-12 z-10">
