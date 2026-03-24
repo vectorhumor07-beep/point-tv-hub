@@ -1,27 +1,53 @@
 import { useState, useMemo } from 'react';
-import { getMovies, getSeries, getChannels } from '@/lib/mockData';
 import { useApp } from '@/context/AppContext';
-import { t } from '@/lib/i18n';
+import { useNavigate } from 'react-router-dom';
+import { Search, Loader2, Film, MonitorPlay, Tv, Star } from 'lucide-react';
+import { getMovies, getSeries, getChannels } from '@/lib/mockData';
 import ContentCard from '@/components/ContentCard';
-import { Search } from 'lucide-react';
+import { useXtreamLive, useXtreamVod, useXtreamSeries } from '@/hooks/useXtreamData';
+import { t } from '@/lib/i18n';
 
 const SearchPage = () => {
-  const { language } = useApp();
+  const { language, isXtreamMode, xtreamCreds } = useApp();
   const [query, setQuery] = useState('');
+  const navigate = useNavigate();
 
-  const movies = getMovies();
-  const series = getSeries();
-  const channels = getChannels();
+  const { streams: liveStreams } = useXtreamLive();
+  const { streams: vodStreams } = useXtreamVod();
+  const { streams: seriesStreams } = useXtreamSeries();
+
+  const mockMovies = getMovies();
+  const mockSeries = getSeries();
+  const mockChannels = getChannels();
 
   const results = useMemo(() => {
-    if (!query.trim()) return { movies: [], series: [], channels: [] };
+    if (!query.trim()) return { movies: [] as any[], series: [] as any[], channels: [] as any[] };
     const q = query.toLowerCase();
+
+    if (isXtreamMode) {
+      return {
+        movies: vodStreams.filter(s => s.name.toLowerCase().includes(q)).slice(0, 30).map(s => ({
+          id: `vod-${s.stream_id}`, title: s.name, poster: s.stream_icon || '', rating: s.rating_5based * 2,
+          genre: [], year: 0, duration: 0, description: '', backdrop: '', director: '', cast: [], streamUrl: '', trailerUrl: '',
+        })),
+        series: seriesStreams.filter(s => s.name.toLowerCase().includes(q)).slice(0, 30).map(s => ({
+          id: `ser-${s.series_id}`, title: s.name, poster: s.cover || '', rating: s.rating_5based * 2,
+          genre: [], year: 0, description: '', backdrop: '', seasons: [],
+        })),
+        channels: liveStreams.filter(s => s.name.toLowerCase().includes(q)).slice(0, 30).map(s => ({
+          id: `xt-${s.stream_id}`, name: s.name, logo: s.stream_icon || '', category: 'live' as any,
+          streamUrl: '', nowPlaying: '', nextUp: '', rating: 0, isHD: s.name.toLowerCase().includes('hd'),
+          streamId: s.stream_id,
+        })),
+      };
+    }
+
     return {
-      movies: movies.filter(m => m.title.toLowerCase().includes(q) || m.genre.some(g => g.toLowerCase().includes(q))),
-      series: series.filter(s => s.title.toLowerCase().includes(q) || s.genre.some(g => g.toLowerCase().includes(q))),
-      channels: channels.filter(c => c.name.toLowerCase().includes(q) || c.category.includes(q)),
+      movies: mockMovies.filter(m => m.title.toLowerCase().includes(q) || m.genre.some(g => g.toLowerCase().includes(q))),
+      series: mockSeries.filter(s => s.title.toLowerCase().includes(q) || s.genre.some(g => g.toLowerCase().includes(q))),
+      channels: mockChannels.filter(c => c.name.toLowerCase().includes(q) || c.category.includes(q)),
     };
-  }, [query, movies, series, channels]);
+  }, [query, isXtreamMode, liveStreams, vodStreams, seriesStreams, mockMovies, mockSeries, mockChannels]);
 
   const hasResults = results.movies.length + results.series.length + results.channels.length > 0;
 
@@ -45,32 +71,43 @@ const SearchPage = () => {
 
       {results.movies.length > 0 && (
         <div className="mb-8">
-          <h2 className="font-display text-xl font-bold mb-4">Movies</h2>
+          <h2 className="font-display text-xl font-bold mb-4 flex items-center gap-2"><Film className="w-5 h-5 text-primary" /> Movies</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {results.movies.map(m => (
-              <ContentCard key={m.id} item={m} type="movie" />
-            ))}
+            {results.movies.map(m => <ContentCard key={m.id} item={m as any} type="movie" />)}
           </div>
         </div>
       )}
 
       {results.series.length > 0 && (
         <div className="mb-8">
-          <h2 className="font-display text-xl font-bold mb-4">Series</h2>
+          <h2 className="font-display text-xl font-bold mb-4 flex items-center gap-2"><MonitorPlay className="w-5 h-5 text-primary" /> Series</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {results.series.map(s => (
-              <ContentCard key={s.id} item={s} type="series" />
-            ))}
+            {results.series.map(s => <ContentCard key={s.id} item={s as any} type="series" />)}
           </div>
         </div>
       )}
 
       {results.channels.length > 0 && (
         <div>
-          <h2 className="font-display text-xl font-bold mb-4">Channels</h2>
+          <h2 className="font-display text-xl font-bold mb-4 flex items-center gap-2"><Tv className="w-5 h-5 text-primary" /> Channels</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {results.channels.map(c => (
-              <ContentCard key={c.id} item={c} type="channel" />
+              <div
+                key={c.id}
+                onClick={() => {
+                  if (isXtreamMode) navigate(`/player/channel/${(c as any).streamId}`);
+                  else navigate(`/player/channel/${c.id}`);
+                }}
+                className="glass-card p-3 cursor-pointer hover:border-primary/30 transition-all rounded-xl"
+              >
+                <img
+                  src={c.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.name)}&size=128`}
+                  alt={c.name}
+                  className="w-16 h-16 rounded-lg object-cover mx-auto mb-2"
+                  onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(c.name)}&size=128`; }}
+                />
+                <p className="text-xs font-semibold text-center truncate">{c.name}</p>
+              </div>
             ))}
           </div>
         </div>
