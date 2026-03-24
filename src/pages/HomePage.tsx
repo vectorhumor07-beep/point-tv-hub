@@ -49,7 +49,7 @@ const HomePage = () => {
     <div className="min-h-screen pb-8">
       <HeroSlider movies={filteredMovies} />
 
-      <section className="px-6 -mt-16 relative z-10 mb-10">
+      <section className="px-6 mt-8 relative z-10 mb-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-6xl mx-auto">
           <div onClick={() => navigate('/live')} className="glass-card-hover p-6 cursor-pointer relative overflow-hidden group">
             <div className="absolute top-0 left-0 right-0 h-1 bg-primary rounded-t-lg" />
