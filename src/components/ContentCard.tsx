@@ -23,7 +23,7 @@ const ContentCard = ({ item, type, size = 'md', showProgress }: ContentCardProps
 
   const handleClick = () => {
     if (type === 'channel') navigate(`/player/channel/${item.id}`);
-    else if (type === 'movie') navigate(`/player/movie/${item.id}`);
+    else if (type === 'movie') navigate(`/movie/${item.id}`);
     else navigate(`/series/${item.id}`);
   };
 
@@ -35,17 +35,17 @@ const ContentCard = ({ item, type, size = 'md', showProgress }: ContentCardProps
 
   return (
     <div className={`content-card group ${sizeClasses[size]} flex-shrink-0`} onClick={handleClick}>
-      <img src={poster} alt={title} className="w-full h-full object-cover" loading="lazy" />
+      <img src={poster} alt={title} className="w-full h-full object-cover rounded-lg" loading="lazy" />
 
       {/* Overlay */}
-      <div className="content-card-overlay absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent opacity-0 transition-opacity duration-300 flex flex-col justify-end p-3">
+      <div className="content-card-overlay absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent opacity-0 transition-opacity duration-300 flex flex-col justify-end p-3 rounded-lg">
         <h3 className="font-display font-bold text-sm leading-tight mb-1">{title}</h3>
         <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
           <span className="flex items-center gap-0.5 text-primary">
             <Star className="w-3 h-3 fill-current" /> {rating}
           </span>
-          {'duration' in item && <span>{(item as Movie).duration}min</span>}
-          {'seasons' in item && <span>{(item as Series).seasons.length} Seasons</span>}
+          {'duration' in item && <span>{(item as Movie).duration}dk</span>}
+          {'seasons' in item && <span>{(item as Series).seasons.length} Sezon</span>}
         </div>
 
         <div className="flex items-center gap-1">
@@ -60,7 +60,7 @@ const ContentCard = ({ item, type, size = 'md', showProgress }: ContentCardProps
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); toggleFavorite(item.id); }}
-            className={`p-1.5 rounded-full transition-colors ${isFavorite ? 'bg-red-500/20 text-red-500' : 'bg-secondary hover:bg-secondary/80'}`}
+            className={`p-1.5 rounded-full transition-colors ${isFavorite ? 'bg-destructive/20 text-destructive' : 'bg-secondary hover:bg-secondary/80'}`}
           >
             <Heart className={`w-3 h-3 ${isFavorite ? 'fill-current' : ''}`} />
           </button>
@@ -69,14 +69,14 @@ const ContentCard = ({ item, type, size = 'md', showProgress }: ContentCardProps
 
       {/* Progress bar */}
       {showProgress !== undefined && showProgress > 0 && (
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-secondary">
-          <div className="h-full bg-primary transition-all" style={{ width: `${showProgress}%` }} />
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-secondary rounded-b-lg">
+          <div className="h-full bg-primary transition-all rounded-b-lg" style={{ width: `${showProgress}%` }} />
         </div>
       )}
 
-      {/* Live badge for channels */}
+      {/* Live badge */}
       {type === 'channel' && (
-        <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-red-600 text-xs font-bold">LIVE</div>
+        <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-destructive text-xs font-bold">LIVE</div>
       )}
     </div>
   );

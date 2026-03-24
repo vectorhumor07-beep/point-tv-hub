@@ -8,6 +8,7 @@ import Header from "@/components/Header";
 import HomePage from "@/pages/HomePage";
 import LiveTVPage from "@/pages/LiveTVPage";
 import MoviesPage from "@/pages/MoviesPage";
+import MovieDetailPage from "@/pages/MovieDetailPage";
 import SeriesListPage from "@/pages/SeriesListPage";
 import SeriesDetailPage from "@/pages/SeriesDetailPage";
 import PlayerPage from "@/pages/PlayerPage";
@@ -43,6 +44,7 @@ const App = () => (
               <Route path="/" element={<HomePage />} />
               <Route path="/live" element={<LiveTVPage />} />
               <Route path="/movies" element={<MoviesPage />} />
+              <Route path="/movie/:id" element={<MovieDetailPage />} />
               <Route path="/series" element={<SeriesListPage />} />
               <Route path="/series/:id" element={<SeriesDetailPage />} />
               <Route path="/player/:type/:id" element={<PlayerPage />} />

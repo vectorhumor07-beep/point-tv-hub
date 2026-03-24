@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { getChannels, getEPG } from '@/lib/mockData';
+import { getChannels } from '@/lib/mockData';
 import { useApp } from '@/context/AppContext';
 import { t } from '@/lib/i18n';
 import { useNavigate } from 'react-router-dom';
 import { Play, Star, Radio } from 'lucide-react';
 import { ChannelCategory } from '@/lib/types';
+import EPGTimeline from '@/components/EPGTimeline';
 
 const categories: ChannelCategory[] = ['news', 'sports', 'movies', 'kids', 'international', 'entertainment', 'music', 'documentary'];
 
@@ -27,6 +28,11 @@ const LiveTVPage = () => {
         {t('nav.liveTV', language)}
       </h1>
 
+      {/* EPG Timeline */}
+      <div className="mb-8">
+        <EPGTimeline />
+      </div>
+
       {/* Category filters */}
       {!kidsMode && (
         <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-hide pb-2">
@@ -36,7 +42,7 @@ const LiveTVPage = () => {
               activeCategory === 'all' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
             }`}
           >
-            All
+            Tümü
           </button>
           {categories.map(cat => (
             <button
@@ -60,7 +66,7 @@ const LiveTVPage = () => {
             onClick={() => navigate(`/player/channel/${channel.id}`)}
             className="glass-card-hover p-4 cursor-pointer flex items-center gap-4"
           >
-            <img src={channel.logo} alt={channel.name} className="w-14 h-14 rounded-lg object-cover" />
+            <img src={channel.logo} alt={channel.name} className="w-14 h-14 rounded-xl object-cover" />
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-sm truncate">{channel.name}</h3>
               <p className="text-xs text-muted-foreground truncate">{channel.nowPlaying}</p>
@@ -71,7 +77,7 @@ const LiveTVPage = () => {
                 {channel.isHD && <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/20 text-primary font-bold">HD</span>}
               </div>
             </div>
-            <button className="p-2 rounded-full bg-primary text-primary-foreground hover:scale-110 transition-transform">
+            <button className="p-2.5 rounded-full bg-primary text-primary-foreground hover:scale-110 transition-transform">
               <Play className="w-4 h-4 fill-current" />
             </button>
           </div>
