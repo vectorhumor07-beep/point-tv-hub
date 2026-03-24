@@ -4,10 +4,11 @@ import { t } from '@/lib/i18n';
 import { storage } from '@/lib/storage';
 import {
   User, Shield, Monitor, Palette, History, Wifi, Clock,
-  ChevronRight, Lock, Eye, EyeOff, Check, Sun, Moon
+  ChevronRight, Lock, Eye, EyeOff, Check, Sun, Moon,
+  Globe, Bell, HardDrive, Zap, Download, Info, Trash2, RotateCcw
 } from 'lucide-react';
 
-type SettingsTab = 'account' | 'parental' | 'player' | 'theme' | 'history' | 'device';
+type SettingsTab = 'account' | 'parental' | 'player' | 'theme' | 'history' | 'device' | 'notifications' | 'storage' | 'about';
 
 const SettingsPage = () => {
   const { language, activeProfile, kidsMode, setKidsMode } = useApp();
