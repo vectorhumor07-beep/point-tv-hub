@@ -3,10 +3,11 @@ import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AppProvider } from "@/context/AppContext";
+import { AppProvider, useApp } from "@/context/AppContext";
 import { PiPProvider, usePiP } from "@/context/PiPContext";
 import Header from "@/components/Header";
 import MiniPlayer from "@/components/MiniPlayer";
+import LoginPage from "@/pages/LoginPage";
 import HomePage from "@/pages/HomePage";
 import LiveTVPage from "@/pages/LiveTVPage";
 import MoviesPage from "@/pages/MoviesPage";
@@ -24,6 +25,7 @@ import MultiScreenPage from "@/pages/MultiScreenPage";
 import EPGPage from "@/pages/EPGPage";
 import CatchupPage from "@/pages/CatchupPage";
 import NotFound from "@/pages/NotFound";
+import { XtreamCredentials, saveCredentials } from "@/services/xtreamApi";
 
 const queryClient = new QueryClient();
 
@@ -42,7 +44,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 const PiPOverlay = () => {
   const { pip, closePiP } = usePiP();
   const location = useLocation();
-  // Don't show PiP on player page
   if (!pip.active || location.pathname.startsWith('/player')) return null;
   return (
     <MiniPlayer
@@ -56,38 +57,60 @@ const PiPOverlay = () => {
   );
 };
 
+const AuthenticatedApp = () => {
+  const { xtreamCreds, setXtreamCreds } = useApp();
+
+  const handleLogin = (creds: XtreamCredentials) => {
+    if (creds.host === 'demo') {
+      // Demo mode - no real xtream, use mock data
+      setXtreamCreds({ host: 'demo', username: 'demo', password: 'demo' });
+    } else {
+      saveCredentials(creds);
+      setXtreamCreds(creds);
+    }
+  };
+
+  if (!xtreamCreds) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
+  return (
+    <PiPProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/live" element={<LiveTVPage />} />
+            <Route path="/movies" element={<MoviesPage />} />
+            <Route path="/movie/:id" element={<MovieDetailPage />} />
+            <Route path="/series" element={<SeriesListPage />} />
+            <Route path="/series/:id" element={<SeriesDetailPage />} />
+            <Route path="/player/:type/:id" element={<PlayerPage />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/favorites" element={<FavoritesPage />} />
+            <Route path="/profiles" element={<ProfilesPage />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/subscription" element={<SubscriptionPage />} />
+            <Route path="/multiscreen" element={<MultiScreenPage />} />
+            <Route path="/epg" element={<EPGPage />} />
+            <Route path="/catchup" element={<CatchupPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Layout>
+        <PiPOverlay />
+      </BrowserRouter>
+    </PiPProvider>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AppProvider>
-        <PiPProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Layout>
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/live" element={<LiveTVPage />} />
-                <Route path="/movies" element={<MoviesPage />} />
-                <Route path="/movie/:id" element={<MovieDetailPage />} />
-                <Route path="/series" element={<SeriesListPage />} />
-                <Route path="/series/:id" element={<SeriesDetailPage />} />
-                <Route path="/player/:type/:id" element={<PlayerPage />} />
-                <Route path="/search" element={<SearchPage />} />
-                <Route path="/favorites" element={<FavoritesPage />} />
-                <Route path="/profiles" element={<ProfilesPage />} />
-                <Route path="/admin" element={<AdminPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/subscription" element={<SubscriptionPage />} />
-                <Route path="/multiscreen" element={<MultiScreenPage />} />
-                <Route path="/epg" element={<EPGPage />} />
-                <Route path="/catchup" element={<CatchupPage />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Layout>
-            <PiPOverlay />
-          </BrowserRouter>
-        </PiPProvider>
+        <AuthenticatedApp />
       </AppProvider>
     </TooltipProvider>
   </QueryClientProvider>
