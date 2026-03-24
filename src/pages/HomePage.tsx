@@ -1,12 +1,12 @@
 import { useNavigate } from 'react-router-dom';
-import { Tv, Film, MonitorPlay, Star, Clock, Shuffle } from 'lucide-react';
+import { Tv, Film, MonitorPlay, Shuffle, Clock } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { t } from '@/lib/i18n';
 import { getChannels, getMovies, getSeries } from '@/lib/mockData';
 import { storage } from '@/lib/storage';
 import ContentCard from '@/components/ContentCard';
 import ContentRow from '@/components/ContentRow';
-import pointtvLogo from '@/assets/pointtv-logo.jpg';
+import HeroSlider from '@/components/HeroSlider';
 
 const HomePage = () => {
   const { language, kidsMode } = useApp();
@@ -41,28 +41,17 @@ const HomePage = () => {
     else navigate(`/series/${random.id}`);
   };
 
-  // Current time for status bar
   const now = new Date();
   const timeStr = now.toLocaleTimeString(language === 'tr' ? 'tr-TR' : 'en-US', { hour: '2-digit', minute: '2-digit' });
 
   return (
     <div className="min-h-screen pb-8">
-      {/* Hero section matching reference */}
-      <section className="relative px-6 pt-24 pb-12">
-        <div className="flex items-center justify-between mb-10">
-          <img src={pointtvLogo} alt="Point TV" className="h-14 rounded-lg" />
-          <div className="flex items-center gap-3">
-            <button className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors">
-              ☁️
-            </button>
-            <button className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors">
-              👤
-            </button>
-          </div>
-        </div>
+      {/* Hero Slider */}
+      <HeroSlider movies={filteredMovies} />
 
-        {/* Main category cards - matching reference design */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+      {/* Category cards matching reference design */}
+      <section className="px-6 -mt-16 relative z-10 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-6xl mx-auto">
           {/* Live TV Card */}
           <div
             onClick={() => navigate('/live')}
@@ -71,16 +60,16 @@ const HomePage = () => {
             <div className="absolute top-0 left-0 right-0 h-1 bg-primary rounded-t-lg" />
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-display text-2xl font-bold text-primary mb-4">
+                <h3 className="font-display text-xl font-bold text-primary mb-3">
                   {t('home.liveTV', language)}
                 </h3>
                 <p className="text-2xl font-bold">+{filteredChannels.length} {t('home.channels', language)}</p>
-                <p className="text-sm text-muted-foreground line-through">
+                <p className="text-xs text-muted-foreground line-through mt-1">
                   {filteredChannels.length + 20} {t('home.channels', language)}
                 </p>
               </div>
-              <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Tv className="w-8 h-8 text-primary" />
+              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Tv className="w-7 h-7 text-primary" />
               </div>
             </div>
           </div>
@@ -92,16 +81,16 @@ const HomePage = () => {
           >
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-display text-2xl font-bold mb-4">
+                <h3 className="font-display text-xl font-bold mb-3">
                   {t('home.movies', language)}
                 </h3>
                 <p className="text-2xl font-bold">+{filteredMovies.length} Movies</p>
-                <p className="text-sm text-muted-foreground line-through">
+                <p className="text-xs text-muted-foreground line-through mt-1">
                   {filteredMovies.length + 30} Movies
                 </p>
               </div>
-              <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Film className="w-8 h-8 text-primary" />
+              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Film className="w-7 h-7 text-primary" />
               </div>
             </div>
           </div>
@@ -113,40 +102,41 @@ const HomePage = () => {
           >
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-display text-2xl font-bold mb-4">
+                <h3 className="font-display text-xl font-bold mb-3">
                   {t('home.series', language)}
                 </h3>
                 <p className="text-2xl font-bold">+{series.length} Series</p>
-                <p className="text-sm text-muted-foreground line-through">
+                <p className="text-xs text-muted-foreground line-through mt-1">
                   {series.length + 15} Series
                 </p>
               </div>
-              <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <MonitorPlay className="w-8 h-8 text-primary" />
+              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <MonitorPlay className="w-7 h-7 text-primary" />
               </div>
             </div>
           </div>
         </div>
-
-        {/* Bottom status bar matching reference */}
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-primary/60" />
-            <span>{t('timeshift', language)}</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <span>{timeStr}</span>
-            <span>|</span>
-            <span>☁️ 21°</span>
-          </div>
-        </div>
       </section>
 
+      {/* Status bar matching reference */}
+      <div className="flex items-center justify-between px-6 mb-8 max-w-6xl mx-auto text-sm text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-primary/60 animate-pulse" />
+          <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {t('timeshift', language)}</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <span>{timeStr}</span>
+          <span className="text-border">|</span>
+          <span>Istanbul</span>
+          <span>☁️ 21°</span>
+        </div>
+      </div>
+
       {/* Surprise Me */}
-      <div className="px-6 mb-8">
+      <div className="px-6 mb-10 max-w-6xl mx-auto">
         <button
           onClick={handleSurprise}
-          className="w-full glass-card-hover flex items-center justify-center gap-3 py-4 text-primary font-display font-bold text-lg"
+          className="w-full glass-card-hover flex items-center justify-center gap-3 py-4 text-primary font-display font-bold text-lg hover:glow-accent"
         >
           <Shuffle className="w-5 h-5" />
           {t('home.surprise', language)}

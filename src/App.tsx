@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,6 +19,18 @@ import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const Layout = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
+  const isPlayer = location.pathname.startsWith('/player');
+  if (isPlayer) return <>{children}</>;
+  return (
+    <>
+      <Header />
+      {children}
+    </>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -26,29 +38,21 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/player/:type/:id" element={<PlayerPage />} />
-            <Route
-              path="*"
-              element={
-                <>
-                  <Header />
-                  <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/live" element={<LiveTVPage />} />
-                    <Route path="/movies" element={<MoviesPage />} />
-                    <Route path="/series" element={<SeriesListPage />} />
-                    <Route path="/series/:id" element={<SeriesDetailPage />} />
-                    <Route path="/search" element={<SearchPage />} />
-                    <Route path="/favorites" element={<FavoritesPage />} />
-                    <Route path="/profiles" element={<ProfilesPage />} />
-                    <Route path="/admin" element={<AdminPage />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </>
-              }
-            />
-          </Routes>
+          <Layout>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/live" element={<LiveTVPage />} />
+              <Route path="/movies" element={<MoviesPage />} />
+              <Route path="/series" element={<SeriesListPage />} />
+              <Route path="/series/:id" element={<SeriesDetailPage />} />
+              <Route path="/player/:type/:id" element={<PlayerPage />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/favorites" element={<FavoritesPage />} />
+              <Route path="/profiles" element={<ProfilesPage />} />
+              <Route path="/admin" element={<AdminPage />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Layout>
         </BrowserRouter>
       </AppProvider>
     </TooltipProvider>
