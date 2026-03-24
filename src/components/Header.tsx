@@ -6,7 +6,7 @@ import NotificationSystem from '@/components/NotificationSystem';
 import pointtvLogo from '@/assets/pointtv-logo.jpg';
 
 const Header = () => {
-  const { language, setLanguage, activeProfile } = useApp();
+  const { language, setLanguage, activeProfile, logout, isXtreamMode } = useApp();
   const location = useLocation();
 
   const navItems = [
