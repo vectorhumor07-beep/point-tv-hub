@@ -1,11 +1,10 @@
-import { useState, useMemo } from 'react';
-import { getChannels, getEPG } from '@/lib/mockData';
+import { useState } from 'react';
+import { getChannels } from '@/lib/mockData';
 import { useApp } from '@/context/AppContext';
 import { t } from '@/lib/i18n';
 import { useNavigate } from 'react-router-dom';
-import { Play, Star, Radio, ChevronRight, ChevronLeft, Clock, X } from 'lucide-react';
-import { ChannelCategory, EPGItem } from '@/lib/types';
-import EPGTimeline from '@/components/EPGTimeline';
+import { Play, Star, Radio } from 'lucide-react';
+import { ChannelCategory } from '@/lib/types';
 
 const categories: ChannelCategory[] = ['news', 'sports', 'movies', 'kids', 'international', 'entertainment', 'music', 'documentary'];
 
@@ -13,8 +12,6 @@ const LiveTVPage = () => {
   const { language, kidsMode } = useApp();
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState<ChannelCategory | 'all'>('all');
-  const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
-  const [epgOpen, setEpgOpen] = useState(false);
 
   const allChannels = getChannels();
   const allEpg = getEPG();
