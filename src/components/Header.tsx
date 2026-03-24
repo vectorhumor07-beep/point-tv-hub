@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Tv, Film, MonitorPlay, Search, Heart, Settings, Globe, Monitor, CreditCard, Clock, Rewind } from 'lucide-react';
+import { Home, Tv, Film, MonitorPlay, Search, Heart, Settings, Globe, Monitor, CreditCard, Clock, Rewind, LogOut } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { t } from '@/lib/i18n';
 import NotificationSystem from '@/components/NotificationSystem';
