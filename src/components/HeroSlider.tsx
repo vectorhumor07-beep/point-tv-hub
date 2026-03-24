@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Play, Info, ChevronLeft, ChevronRight, Star, Plus, Check, Heart, Volume2, VolumeX } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import { Movie } from '@/lib/types';
 
-// Hero images
+// Hero images as fallback
 import heroAction from '@/assets/hero/hero-action.jpg';
 import heroScifi from '@/assets/hero/hero-scifi.jpg';
 import heroDrama from '@/assets/hero/hero-drama.jpg';
@@ -20,6 +20,9 @@ const HeroSlider = ({ movies }: HeroSliderProps) => {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [videoLoaded, setVideoLoaded] = useState<Record<number, boolean>>({});
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const navigate = useNavigate();
   const { watchlist, toggleWatchlist, favorites, toggleFavorite } = useApp();
 
