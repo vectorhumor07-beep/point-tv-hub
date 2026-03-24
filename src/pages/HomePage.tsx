@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Tv, Film, MonitorPlay, Shuffle, Clock } from 'lucide-react';
+import { Tv, Film, MonitorPlay, Shuffle, Clock, Loader2 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { t } from '@/lib/i18n';
 import { getChannels, getMovies, getSeries } from '@/lib/mockData';
@@ -8,23 +8,70 @@ import ContentCard from '@/components/ContentCard';
 import TrailerPreview from '@/components/TrailerPreview';
 import ContentRow from '@/components/ContentRow';
 import HeroSlider from '@/components/HeroSlider';
+import BufferingScreen from '@/components/BufferingScreen';
+import { useXtreamLive, useXtreamVod, useXtreamSeries } from '@/hooks/useXtreamData';
+import { Movie, Series } from '@/lib/types';
+import { useMemo } from 'react';
 
 const HomePage = () => {
-  const { language, kidsMode } = useApp();
+  const { language, kidsMode, isXtreamMode, xtreamCreds } = useApp();
   const navigate = useNavigate();
 
-  const channels = getChannels();
-  const movies = getMovies();
-  const series = getSeries();
+  const { streams: liveStreams, loading: liveLoading } = useXtreamLive();
+  const { streams: vodStreams, categories: vodCats, loading: vodLoading } = useXtreamVod();
+  const { streams: seriesStreams, categories: seriesCats, loading: seriesLoading } = useXtreamSeries();
+
+  const loading = isXtreamMode && (liveLoading || vodLoading || seriesLoading);
+
+  // Build data based on mode
+  const channelCount = isXtreamMode ? liveStreams.length : getChannels().length;
+
+  const movies: Movie[] = useMemo(() => {
+    if (!isXtreamMode) return getMovies();
+    return vodStreams.map(s => ({
+      id: `vod-${s.stream_id}`,
+      title: s.name,
+      poster: s.stream_icon || '',
+      backdrop: s.stream_icon || '',
+      description: '',
+      genre: [vodCats.find(c => c.category_id === s.category_id)?.category_name || ''].filter(Boolean),
+      rating: s.rating_5based ? s.rating_5based * 2 : 0,
+      duration: 0,
+      year: parseInt(s.added?.substring(0, 4)) || 2024,
+      director: '',
+      cast: [],
+      streamUrl: xtreamCreds ? `${xtreamCreds.host.replace(/\/$/, '')}/movie/${xtreamCreds.username}/${xtreamCreds.password}/${s.stream_id}.${s.container_extension}` : '',
+      trailerUrl: '',
+      streamId: s.stream_id,
+      container_extension: s.container_extension,
+      category_id: s.category_id,
+    })) as Movie[];
+  }, [isXtreamMode, vodStreams, vodCats, xtreamCreds]);
+
+  const series: Series[] = useMemo(() => {
+    if (!isXtreamMode) return getSeries();
+    return seriesStreams.map(s => ({
+      id: `ser-${s.series_id}`,
+      title: s.name,
+      poster: s.cover || '',
+      backdrop: s.backdrop_path?.[0] || s.cover || '',
+      description: s.plot || '',
+      genre: [s.genre || seriesCats.find(c => c.category_id === s.category_id)?.category_name || ''].filter(Boolean),
+      rating: s.rating_5based ? s.rating_5based * 2 : parseFloat(s.rating) || 0,
+      year: parseInt(s.releaseDate?.substring(0, 4)) || 2024,
+      seasons: [],
+      seriesId: s.series_id,
+      category_id: s.category_id,
+    })) as Series[];
+  }, [isXtreamMode, seriesStreams, seriesCats]);
+
   const progress = storage.getWatchProgress();
   const recentIds = storage.getRecentlyWatched();
 
-  const kidsChannels = channels.filter(c => c.category === 'kids');
-  const filteredChannels = kidsMode ? kidsChannels : channels;
-  const filteredMovies = kidsMode ? movies.filter(m => m.genre.some(g => ['Comedy', 'Fantasy', 'Adventure'].includes(g))) : movies;
+  const filteredMovies = kidsMode ? movies.filter(m => m.genre.some(g => ['Comedy', 'Fantasy', 'Adventure', 'ÇOCUK'].includes(g))) : movies;
 
-  const trending = [...movies].sort(() => Math.random() - 0.5).slice(0, 10);
-  const recommended = [...movies].sort(() => Math.random() - 0.5).slice(0, 10);
+  const trending = useMemo(() => [...filteredMovies].sort(() => Math.random() - 0.5).slice(0, 10), [filteredMovies]);
+  const recommended = useMemo(() => [...filteredMovies].sort(() => Math.random() - 0.5).slice(0, 10), [filteredMovies]);
   const continueWatching = progress.filter(p => p.progress > 0 && p.progress < p.duration * 0.9);
 
   const continueMovies = continueWatching
@@ -37,6 +84,7 @@ const HomePage = () => {
 
   const handleSurprise = () => {
     const allContent = [...movies.map(m => ({ id: m.id, type: 'movie' as const })), ...series.map(s => ({ id: s.id, type: 'series' as const }))];
+    if (allContent.length === 0) return;
     const random = allContent[Math.floor(Math.random() * allContent.length)];
     if (random.type === 'movie') navigate(`/player/movie/${random.id}`);
     else navigate(`/series/${random.id}`);
@@ -44,6 +92,10 @@ const HomePage = () => {
 
   const now = new Date();
   const timeStr = now.toLocaleTimeString(language === 'tr' ? 'tr-TR' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+
+  if (loading) {
+    return <BufferingScreen loading={loading} type="movie" />;
+  }
 
   return (
     <div className="min-h-screen pb-8">
@@ -56,8 +108,7 @@ const HomePage = () => {
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="font-display text-xl font-bold text-primary mb-3">{t('home.liveTV', language)}</h3>
-                <p className="text-2xl font-bold">+{filteredChannels.length} {t('home.channels', language)}</p>
-                <p className="text-xs text-muted-foreground line-through mt-1">{filteredChannels.length + 20} {t('home.channels', language)}</p>
+                <p className="text-2xl font-bold">+{channelCount} {t('home.channels', language)}</p>
               </div>
               <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Tv className="w-7 h-7 text-primary" />
@@ -69,8 +120,7 @@ const HomePage = () => {
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="font-display text-xl font-bold mb-3">{t('home.movies', language)}</h3>
-                <p className="text-2xl font-bold">+{filteredMovies.length} Movies</p>
-                <p className="text-xs text-muted-foreground line-through mt-1">{filteredMovies.length + 30} Movies</p>
+                <p className="text-2xl font-bold">+{filteredMovies.length} {language === 'tr' ? 'Film' : 'Movies'}</p>
               </div>
               <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Film className="w-7 h-7 text-primary" />
@@ -82,8 +132,7 @@ const HomePage = () => {
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="font-display text-xl font-bold mb-3">{t('home.series', language)}</h3>
-                <p className="text-2xl font-bold">+{series.length} Series</p>
-                <p className="text-xs text-muted-foreground line-through mt-1">{series.length + 15} Series</p>
+                <p className="text-2xl font-bold">+{series.length} {language === 'tr' ? 'Dizi' : 'Series'}</p>
               </div>
               <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <MonitorPlay className="w-7 h-7 text-primary" />
@@ -129,18 +178,18 @@ const HomePage = () => {
         </ContentRow>
       )}
 
-      {/* Trending - with trailer preview */}
+      {/* Trending */}
       <ContentRow title={t('home.trending', language)} onSeeAll={() => navigate('/movies')}>
         {trending.map(m => <TrailerPreview key={m.id} item={m} type="movie" size="lg" />)}
       </ContentRow>
 
-      {/* Recommended - with trailer preview */}
+      {/* Recommended */}
       <ContentRow title={t('home.recommended', language)}>
         {recommended.map(m => <TrailerPreview key={m.id} item={m} type="movie" />)}
       </ContentRow>
 
       <ContentRow title={t('home.series', language)} onSeeAll={() => navigate('/series')}>
-        {series.map(s => <TrailerPreview key={s.id} item={s} type="series" />)}
+        {series.slice(0, 20).map(s => <TrailerPreview key={s.id} item={s} type="series" />)}
       </ContentRow>
 
       {recentMovies.length > 0 && (
