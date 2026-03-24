@@ -21,18 +21,11 @@ const LiveTVPage = () => {
     : allChannels.filter(c => c.category === activeCategory);
 
   return (
-    <div className="min-h-screen pt-20 pb-8 px-6 flex">
-      {/* Main Content */}
-      <div className={`flex-1 transition-all duration-300 ${epgOpen ? 'mr-[360px]' : ''}`}>
-        <h1 className="font-display text-3xl font-bold mb-6 flex items-center gap-3">
-          <Radio className="w-8 h-8 text-primary" />
-          {t('nav.liveTV', language)}
-        </h1>
-
-        {/* EPG Timeline */}
-        <div className="mb-8">
-          <EPGTimeline />
-        </div>
+    <div className="min-h-screen pt-20 pb-8 px-6">
+      <h1 className="font-display text-3xl font-bold mb-6 flex items-center gap-3">
+        <Radio className="w-8 h-8 text-primary" />
+        {t('nav.liveTV', language)}
+      </h1>
 
         {/* Category filters */}
         {!kidsMode && (
