@@ -66,7 +66,7 @@ export const useXtreamSeries = () => {
   const { xtreamCreds, isXtreamMode } = useApp();
   const [categories, setCategories] = useState<XtreamCategory[]>([]);
   const [streams, setStreams] = useState<XtreamSeriesItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(isXtreamMode && !!xtreamCreds);
 
   useEffect(() => {
     if (!isXtreamMode || !xtreamCreds) return;
