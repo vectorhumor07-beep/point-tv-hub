@@ -66,7 +66,7 @@ const SeriesDetailPage = () => {
   const season = series.seasons[activeSeason];
   const isInWatchlist = watchlist.includes(series.id);
   const isFavorite = favorites.includes(series.id);
-  const totalEpisodes = series.seasons.reduce((acc, s) => acc + s.episodes.length, 0);
+  const totalEpisodes = series.seasons.reduce((acc: number, s: any) => acc + s.episodes.length, 0);
   const similarSeries = !isXtreamMode ? allSeries.filter(s => s.genre.some(g => series.genre.includes(g))).slice(0, 6) : [];
 
   const handleEpisodePlay = (ep: any, seasonNum: number) => {
