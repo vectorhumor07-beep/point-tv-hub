@@ -60,6 +60,20 @@ const HeroSlider = ({ movies }: HeroSliderProps) => {
     return () => clearInterval(interval);
   }, [next, isPaused]);
 
+  // Manage video playback per slide
+  useEffect(() => {
+    videoRefs.current.forEach((video, i) => {
+      if (!video) return;
+      if (i === current) {
+        video.currentTime = 0;
+        video.muted = isMuted;
+        video.play().catch(() => {});
+      } else {
+        video.pause();
+      }
+    });
+  }, [current, isMuted]);
+
   const movie = featured[current];
   if (!movie) return null;
 
