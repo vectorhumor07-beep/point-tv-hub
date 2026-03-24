@@ -27,7 +27,7 @@ const HeroSlider = ({ movies }: HeroSliderProps) => {
   const { watchlist, toggleWatchlist, favorites, toggleFavorite } = useApp();
 
   const featured = movies.slice(0, 5);
-  const SLIDE_DURATION = 7000;
+  const SLIDE_DURATION = 15000;
 
   const goTo = useCallback((index: number) => {
     if (isTransitioning) return;
