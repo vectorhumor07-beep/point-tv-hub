@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { t } from '@/lib/i18n';
 import ContentCard from '@/components/ContentCard';
-import { MonitorPlay, LayoutGrid, Loader2 } from 'lucide-react';
+import { MonitorPlay, LayoutGrid } from 'lucide-react';
+import BufferingScreen from '@/components/BufferingScreen';
 import { getSeries } from '@/lib/mockData';
 import { useXtreamSeries } from '@/hooks/useXtreamData';
 
