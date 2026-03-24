@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Tv, Film, MonitorPlay, Search, Heart, Settings, Globe, Monitor, CreditCard } from 'lucide-react';
+import { Home, Tv, Film, MonitorPlay, Search, Heart, Settings, Globe, Monitor, CreditCard, Clock } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { t } from '@/lib/i18n';
 import pointtvLogo from '@/assets/pointtv-logo.jpg';
@@ -13,6 +13,7 @@ const Header = () => {
     { to: '/live', icon: Tv, label: t('nav.liveTV', language) },
     { to: '/movies', icon: Film, label: t('nav.movies', language) },
     { to: '/series', icon: MonitorPlay, label: t('nav.series', language) },
+    { to: '/epg', icon: Clock, label: 'EPG' },
     { to: '/multiscreen', icon: Monitor, label: 'Multi-Screen' },
     { to: '/search', icon: Search, label: t('nav.search', language) },
     { to: '/favorites', icon: Heart, label: t('nav.favorites', language) },

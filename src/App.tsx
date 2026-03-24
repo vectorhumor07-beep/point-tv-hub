@@ -19,6 +19,7 @@ import AdminPage from "@/pages/AdminPage";
 import SettingsPage from "@/pages/SettingsPage";
 import SubscriptionPage from "@/pages/SubscriptionPage";
 import MultiScreenPage from "@/pages/MultiScreenPage";
+import EPGPage from "@/pages/EPGPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -58,6 +59,7 @@ const App = () => (
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/subscription" element={<SubscriptionPage />} />
               <Route path="/multiscreen" element={<MultiScreenPage />} />
+              <Route path="/epg" element={<EPGPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Layout>
