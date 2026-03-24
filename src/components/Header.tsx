@@ -64,6 +64,14 @@ const Header = () => {
             <Settings className="w-4 h-4" />
           </Link>
 
+          <button
+            onClick={logout}
+            className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+            title={language === 'tr' ? 'Çıkış' : 'Logout'}
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+
           <Link to="/profiles" className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center text-lg ring-2 ring-primary/30">
               {activeProfile?.avatar || '👤'}
