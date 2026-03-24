@@ -38,37 +38,57 @@ export const generateChannels = (): Channel[] => {
   return channels;
 };
 
+// Poster image map for movies that have generated images
+const posterMap: Record<string, string> = {};
+
+// We'll dynamically import posters
+const loadPosters = () => {
+  const modules = import.meta.glob('/src/assets/posters/*.jpg', { eager: true, import: 'default' }) as Record<string, string>;
+  const map: Record<string, string> = {};
+  for (const [path, url] of Object.entries(modules)) {
+    const filename = path.split('/').pop()?.replace('.jpg', '') || '';
+    map[filename] = url;
+  }
+  return map;
+};
+
+let _posterCache: Record<string, string> | null = null;
+const getPosters = () => {
+  if (!_posterCache) _posterCache = loadPosters();
+  return _posterCache;
+};
+
 const movieTitles = [
-  { title: 'The Dark Horizon', genre: ['Action', 'Thriller'], year: 2024 },
-  { title: 'Whispers in the Wind', genre: ['Drama', 'Romance'], year: 2023 },
-  { title: 'Neon Nights', genre: ['Sci-Fi', 'Action'], year: 2024 },
-  { title: 'The Last Garden', genre: ['Drama'], year: 2023 },
-  { title: 'Quantum Break', genre: ['Sci-Fi', 'Thriller'], year: 2024 },
-  { title: 'Silent Waters', genre: ['Horror', 'Mystery'], year: 2023 },
-  { title: 'Golden Age', genre: ['Drama', 'History'], year: 2024 },
-  { title: 'Velocity', genre: ['Action', 'Sport'], year: 2024 },
-  { title: 'The Forgotten Kingdom', genre: ['Fantasy', 'Adventure'], year: 2023 },
-  { title: 'Midnight Express', genre: ['Thriller', 'Crime'], year: 2024 },
-  { title: 'Starlight Symphony', genre: ['Sci-Fi', 'Drama'], year: 2023 },
-  { title: 'Wild Hearts', genre: ['Romance', 'Comedy'], year: 2024 },
-  { title: 'Iron Will', genre: ['Action', 'Drama'], year: 2023 },
-  { title: 'The Art of Silence', genre: ['Drama', 'Mystery'], year: 2024 },
-  { title: 'Crimson Tide', genre: ['Action', 'Thriller'], year: 2023 },
-  { title: 'Electric Dreams', genre: ['Sci-Fi'], year: 2024 },
-  { title: 'Ocean\'s Echo', genre: ['Adventure', 'Drama'], year: 2023 },
-  { title: 'Phantom Protocol', genre: ['Action', 'Spy'], year: 2024 },
-  { title: 'The Mirror', genre: ['Horror', 'Psychological'], year: 2023 },
-  { title: 'Sunrise Boulevard', genre: ['Drama', 'Romance'], year: 2024 },
-  { title: 'Steel Mountain', genre: ['Action', 'Adventure'], year: 2023 },
-  { title: 'Lost in Translation', genre: ['Comedy', 'Drama'], year: 2024 },
-  { title: 'The Red Door', genre: ['Thriller', 'Mystery'], year: 2023 },
-  { title: 'Galactic Storm', genre: ['Sci-Fi', 'Action'], year: 2024 },
-  { title: 'Ember Falls', genre: ['Drama', 'Fantasy'], year: 2023 },
-  { title: 'Code Zero', genre: ['Thriller', 'Tech'], year: 2024 },
-  { title: 'Northern Lights', genre: ['Drama', 'Romance'], year: 2023 },
-  { title: 'The Alchemist', genre: ['Fantasy', 'Adventure'], year: 2024 },
-  { title: 'Shadow Ops', genre: ['Action', 'Spy'], year: 2023 },
-  { title: 'Crystal Lake', genre: ['Horror'], year: 2024 },
+  { title: 'The Dark Horizon', genre: ['Action', 'Thriller'], year: 2024, posterKey: 'dark-horizon' },
+  { title: 'Whispers in the Wind', genre: ['Drama', 'Romance'], year: 2023, posterKey: '' },
+  { title: 'Neon Nights', genre: ['Sci-Fi', 'Action'], year: 2024, posterKey: 'neon-nights' },
+  { title: 'The Last Garden', genre: ['Drama'], year: 2023, posterKey: '' },
+  { title: 'Quantum Break', genre: ['Sci-Fi', 'Thriller'], year: 2024, posterKey: 'quantum-break' },
+  { title: 'Silent Waters', genre: ['Horror', 'Mystery'], year: 2023, posterKey: '' },
+  { title: 'Golden Age', genre: ['Drama', 'History'], year: 2024, posterKey: 'golden-age' },
+  { title: 'Velocity', genre: ['Action', 'Sport'], year: 2024, posterKey: 'velocity' },
+  { title: 'The Forgotten Kingdom', genre: ['Fantasy', 'Adventure'], year: 2023, posterKey: 'forgotten-kingdom' },
+  { title: 'Midnight Express', genre: ['Thriller', 'Crime'], year: 2024, posterKey: 'midnight-express' },
+  { title: 'Starlight Symphony', genre: ['Sci-Fi', 'Drama'], year: 2023, posterKey: '' },
+  { title: 'Wild Hearts', genre: ['Romance', 'Comedy'], year: 2024, posterKey: '' },
+  { title: 'Iron Will', genre: ['Action', 'Drama'], year: 2023, posterKey: '' },
+  { title: 'The Art of Silence', genre: ['Drama', 'Mystery'], year: 2024, posterKey: '' },
+  { title: 'Crimson Tide', genre: ['Action', 'Thriller'], year: 2023, posterKey: '' },
+  { title: 'Electric Dreams', genre: ['Sci-Fi'], year: 2024, posterKey: 'electric-dreams' },
+  { title: 'Ocean\'s Echo', genre: ['Adventure', 'Drama'], year: 2023, posterKey: '' },
+  { title: 'Phantom Protocol', genre: ['Action', 'Spy'], year: 2024, posterKey: '' },
+  { title: 'The Mirror', genre: ['Horror', 'Psychological'], year: 2023, posterKey: 'the-mirror' },
+  { title: 'Sunrise Boulevard', genre: ['Drama', 'Romance'], year: 2024, posterKey: '' },
+  { title: 'Steel Mountain', genre: ['Action', 'Adventure'], year: 2023, posterKey: '' },
+  { title: 'Lost in Translation', genre: ['Comedy', 'Drama'], year: 2024, posterKey: '' },
+  { title: 'The Red Door', genre: ['Thriller', 'Mystery'], year: 2023, posterKey: '' },
+  { title: 'Galactic Storm', genre: ['Sci-Fi', 'Action'], year: 2024, posterKey: '' },
+  { title: 'Ember Falls', genre: ['Drama', 'Fantasy'], year: 2023, posterKey: '' },
+  { title: 'Code Zero', genre: ['Thriller', 'Tech'], year: 2024, posterKey: '' },
+  { title: 'Northern Lights', genre: ['Drama', 'Romance'], year: 2023, posterKey: '' },
+  { title: 'The Alchemist', genre: ['Fantasy', 'Adventure'], year: 2024, posterKey: '' },
+  { title: 'Shadow Ops', genre: ['Action', 'Spy'], year: 2023, posterKey: 'shadow-ops' },
+  { title: 'Crystal Lake', genre: ['Horror'], year: 2024, posterKey: '' },
 ];
 
 const directors = ['Christopher Nolan', 'Denis Villeneuve', 'Greta Gerwig', 'Martin Scorsese', 'Ridley Scott', 'Taika Waititi', 'Jordan Peele', 'David Fincher'];
@@ -77,21 +97,26 @@ const actors = ['Tom Hardy', 'Florence Pugh', 'Oscar Isaac', 'Zendaya', 'TimothÃ
 const posterColors = ['2C3E50', '8E44AD', '2980B9', '27AE60', 'D35400', 'C0392B', '16A085', 'F39C12', '1ABC9C', '34495E'];
 
 export const generateMovies = (): Movie[] => {
-  return movieTitles.map((m, i) => ({
-    id: `movie-${i + 1}`,
-    title: m.title,
-    poster: `https://ui-avatars.com/api/?name=${encodeURIComponent(m.title)}&background=${posterColors[i % posterColors.length]}&color=fff&size=300&font-size=0.25&bold=true`,
-    backdrop: `https://ui-avatars.com/api/?name=${encodeURIComponent(m.title)}&background=${posterColors[i % posterColors.length]}&color=fff&size=1200&font-size=0.15`,
-    description: `A gripping ${m.genre[0].toLowerCase()} film that takes audiences on an unforgettable journey. ${m.title} pushes the boundaries of cinema with stunning visuals and powerful performances.`,
-    genre: m.genre,
-    rating: Math.round((6.5 + Math.random() * 3) * 10) / 10,
-    duration: 90 + Math.floor(Math.random() * 60),
-    year: m.year,
-    director: directors[i % directors.length],
-    cast: [actors[i % actors.length], actors[(i + 1) % actors.length], actors[(i + 2) % actors.length]],
-    streamUrl: SAMPLE_VIDEO,
-    trailerUrl: SAMPLE_VIDEO,
-  }));
+  const posters = getPosters();
+  return movieTitles.map((m, i) => {
+    const realPoster = m.posterKey ? posters[m.posterKey] : undefined;
+    const fallbackPoster = `https://ui-avatars.com/api/?name=${encodeURIComponent(m.title)}&background=${posterColors[i % posterColors.length]}&color=fff&size=300&font-size=0.25&bold=true`;
+    return {
+      id: `movie-${i + 1}`,
+      title: m.title,
+      poster: realPoster || fallbackPoster,
+      backdrop: realPoster || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.title)}&background=${posterColors[i % posterColors.length]}&color=fff&size=1200&font-size=0.15`,
+      description: `A gripping ${m.genre[0].toLowerCase()} film that takes audiences on an unforgettable journey. ${m.title} pushes the boundaries of cinema with stunning visuals and powerful performances.`,
+      genre: m.genre,
+      rating: Math.round((6.5 + Math.random() * 3) * 10) / 10,
+      duration: 90 + Math.floor(Math.random() * 60),
+      year: m.year,
+      director: directors[i % directors.length],
+      cast: [actors[i % actors.length], actors[(i + 1) % actors.length], actors[(i + 2) % actors.length]],
+      streamUrl: SAMPLE_VIDEO,
+      trailerUrl: SAMPLE_VIDEO,
+    };
+  });
 };
 
 const seriesTitles = [
@@ -162,7 +187,6 @@ export const generateEPG = (channels: Channel[]): EPGItem[] => {
   return items;
 };
 
-// Singleton data
 let _channels: Channel[] | null = null;
 let _movies: Movie[] | null = null;
 let _series: Series[] | null = null;
