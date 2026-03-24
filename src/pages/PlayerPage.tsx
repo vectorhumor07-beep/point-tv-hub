@@ -1,13 +1,15 @@
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import { getChannels, getMovies, getSeries } from '@/lib/mockData';
+import { getChannels, getMovies, getSeries, getEPG } from '@/lib/mockData';
 import { storage } from '@/lib/storage';
-import { ArrowLeft, Maximize, Volume2, VolumeX, SkipForward, Settings } from 'lucide-react';
-import { useRef, useState, useEffect } from 'react';
+import { useApp } from '@/context/AppContext';
+import { ArrowLeft, Maximize, Volume2, VolumeX, SkipForward, Clock, X } from 'lucide-react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 
 const PlayerPage = () => {
   const { type, id } = useParams<{ type: string; id: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { language } = useApp();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
@@ -15,7 +17,11 @@ const PlayerPage = () => {
   const [duration, setDuration] = useState(0);
   const [showControls, setShowControls] = useState(true);
   const [playbackRate, setPlaybackRate] = useState(1);
+  const [epgOpen, setEpgOpen] = useState(type === 'channel');
   const controlsTimeout = useRef<NodeJS.Timeout>();
+
+  const allEpg = getEPG();
+  const now = new Date();
 
   let title = '';
   let streamUrl = '';
@@ -42,15 +48,19 @@ const PlayerPage = () => {
     subtitle = `S${sNum}E${eNum} - ${episode?.title || ''}`;
   }
 
-  // Fallback
   if (!streamUrl) {
     streamUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
   }
 
+  const channelEpg = useMemo(() => {
+    if (type !== 'channel' || !id) return [];
+    return allEpg
+      .filter(e => e.channelId === id)
+      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+  }, [type, id, allEpg]);
+
   useEffect(() => {
-    if (id) {
-      storage.addRecentlyWatched(id);
-    }
+    if (id) storage.addRecentlyWatched(id);
   }, [id]);
 
   const handleTimeUpdate = () => {
@@ -65,10 +75,7 @@ const PlayerPage = () => {
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     const time = parseFloat(e.target.value);
-    if (videoRef.current) {
-      videoRef.current.currentTime = time;
-      setProgress(time);
-    }
+    if (videoRef.current) { videoRef.current.currentTime = time; setProgress(time); }
   };
 
   const togglePlay = () => {
@@ -89,6 +96,13 @@ const PlayerPage = () => {
     controlsTimeout.current = setTimeout(() => setShowControls(false), 3000);
   };
 
+  const handleVideoClick = () => {
+    if (type === 'channel') {
+      setEpgOpen(prev => !prev);
+    }
+    togglePlay();
+  };
+
   const changeSpeed = () => {
     const speeds = [0.5, 1, 1.25, 1.5, 2];
     const idx = speeds.indexOf(playbackRate);
@@ -103,70 +117,128 @@ const PlayerPage = () => {
     return `${m}:${sec.toString().padStart(2, '0')}`;
   };
 
+  const formatEpgTime = (iso: string) => {
+    const d = new Date(iso);
+    return d.toLocaleTimeString(language === 'tr' ? 'tr-TR' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+  };
+
   return (
-    <div className="fixed inset-0 bg-background z-50" onMouseMove={handleMouseMove} onClick={togglePlay}>
-      <video
-        ref={videoRef}
-        src={streamUrl}
-        autoPlay
-        className="w-full h-full object-contain"
-        onTimeUpdate={handleTimeUpdate}
-        onLoadedMetadata={() => {
-          if (videoRef.current) setDuration(videoRef.current.duration);
-        }}
-      />
+    <div className="fixed inset-0 bg-background z-50 flex" onMouseMove={handleMouseMove}>
+      {/* Video area */}
+      <div className={`flex-1 relative transition-all duration-300 ${epgOpen && type === 'channel' ? 'mr-0' : ''}`} onClick={handleVideoClick}>
+        <video
+          ref={videoRef}
+          src={streamUrl}
+          autoPlay
+          className="w-full h-full object-contain"
+          onTimeUpdate={handleTimeUpdate}
+          onLoadedMetadata={() => { if (videoRef.current) setDuration(videoRef.current.duration); }}
+        />
 
-      {/* Controls overlay */}
-      <div
-        className={`absolute inset-0 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Top bar */}
-        <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-background/80 to-transparent flex items-center gap-4">
-          <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-secondary/50 transition-colors">
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-          <div>
-            <h2 className="font-display font-bold">{title}</h2>
-            <p className="text-xs text-muted-foreground">{subtitle}</p>
-          </div>
-        </div>
-
-        {/* Bottom controls */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background/80 to-transparent">
-          {/* Progress */}
-          <input
-            type="range"
-            min={0}
-            max={duration || 1}
-            value={progress}
-            onChange={handleSeek}
-            className="w-full h-1 mb-3 appearance-none bg-secondary rounded-full cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full"
-          />
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button onClick={togglePlay} className="p-2 rounded-full hover:bg-secondary/50">
-                {isPlaying ? '⏸' : '▶️'}
-              </button>
-              <button onClick={() => setIsMuted(!isMuted)} className="p-2 rounded-full hover:bg-secondary/50">
-                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-              </button>
-              <span className="text-xs text-muted-foreground">{formatTime(progress)} / {formatTime(duration)}</span>
+        {/* Controls overlay */}
+        <div
+          className={`absolute inset-0 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-background/80 to-transparent flex items-center gap-4">
+            <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-secondary/50 transition-colors">
+              <ArrowLeft className="w-6 h-6" />
+            </button>
+            <div className="flex-1">
+              <h2 className="font-display font-bold">{title}</h2>
+              <p className="text-xs text-muted-foreground">{subtitle}</p>
             </div>
-            <div className="flex items-center gap-3">
-              <button onClick={changeSpeed} className="px-2 py-1 rounded text-xs bg-secondary hover:bg-secondary/80">
-                {playbackRate}x
+            {type === 'channel' && (
+              <button
+                onClick={() => setEpgOpen(!epgOpen)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  epgOpen ? 'bg-primary text-primary-foreground' : 'bg-secondary hover:bg-secondary/80'
+                }`}
+              >
+                <Clock className="w-4 h-4" />
+                EPG
               </button>
-              <button className="p-2 rounded-full hover:bg-secondary/50">
-                <SkipForward className="w-5 h-5" />
-              </button>
-              <button onClick={toggleFullscreen} className="p-2 rounded-full hover:bg-secondary/50">
-                <Maximize className="w-5 h-5" />
-              </button>
+            )}
+          </div>
+
+          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background/80 to-transparent">
+            <input
+              type="range" min={0} max={duration || 1} value={progress} onChange={handleSeek}
+              className="w-full h-1 mb-3 appearance-none bg-secondary rounded-full cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full"
+            />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <button onClick={togglePlay} className="p-2 rounded-full hover:bg-secondary/50">
+                  {isPlaying ? '⏸' : '▶️'}
+                </button>
+                <button onClick={() => setIsMuted(!isMuted)} className="p-2 rounded-full hover:bg-secondary/50">
+                  {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                </button>
+                <span className="text-xs text-muted-foreground">{formatTime(progress)} / {formatTime(duration)}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <button onClick={changeSpeed} className="px-2 py-1 rounded text-xs bg-secondary hover:bg-secondary/80">{playbackRate}x</button>
+                <button className="p-2 rounded-full hover:bg-secondary/50"><SkipForward className="w-5 h-5" /></button>
+                <button onClick={toggleFullscreen} className="p-2 rounded-full hover:bg-secondary/50"><Maximize className="w-5 h-5" /></button>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* EPG Sidebar - only for channels */}
+      {type === 'channel' && (
+        <div className={`h-full bg-background/95 border-l border-border/50 transition-all duration-300 overflow-hidden ${epgOpen ? 'w-[340px]' : 'w-0'}`}>
+          <div className="w-[340px] h-full flex flex-col">
+            <div className="p-3 border-b border-border/50 flex items-center justify-between">
+              <h3 className="font-display font-bold text-sm flex items-center gap-2">
+                <Clock className="w-4 h-4 text-primary" />
+                {language === 'tr' ? 'Program Rehberi' : 'Program Guide'}
+              </h3>
+              <button onClick={() => setEpgOpen(false)} className="p-1.5 rounded-lg hover:bg-secondary">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-2 space-y-1">
+              {channelEpg.map((prog, i) => {
+                const start = new Date(prog.startTime);
+                const end = new Date(prog.endTime);
+                const isNow = now >= start && now < end;
+                const isPast = now >= end;
+                const progressPct = isNow
+                  ? ((now.getTime() - start.getTime()) / (end.getTime() - start.getTime())) * 100
+                  : 0;
+
+                return (
+                  <div
+                    key={i}
+                    className={`p-2.5 rounded-lg transition-all ${
+                      isNow ? 'bg-primary/15 border border-primary/30'
+                        : isPast ? 'bg-secondary/20 opacity-40'
+                        : 'bg-secondary/40 hover:bg-secondary/60'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className={`text-[10px] font-mono ${isNow ? 'text-primary font-bold' : 'text-muted-foreground'}`}>
+                        {formatEpgTime(prog.startTime)} - {formatEpgTime(prog.endTime)}
+                      </span>
+                      {isNow && <span className="px-1 py-0.5 rounded bg-primary text-primary-foreground text-[9px] font-bold">LIVE</span>}
+                    </div>
+                    <p className={`text-xs font-semibold truncate ${isNow ? 'text-primary' : ''}`}>{prog.title}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{prog.description}</p>
+                    {isNow && (
+                      <div className="mt-1.5 h-0.5 rounded-full bg-muted overflow-hidden">
+                        <div className="h-full bg-primary rounded-full" style={{ width: `${progressPct}%` }} />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

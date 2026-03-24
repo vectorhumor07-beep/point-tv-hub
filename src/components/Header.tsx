@@ -13,6 +13,7 @@ const Header = () => {
     { to: '/live', icon: Tv, label: t('nav.liveTV', language) },
     { to: '/movies', icon: Film, label: t('nav.movies', language) },
     { to: '/series', icon: MonitorPlay, label: t('nav.series', language) },
+    { to: '/epg', icon: Clock, label: 'EPG' },
     { to: '/multiscreen', icon: Monitor, label: 'Multi-Screen' },
     { to: '/search', icon: Search, label: t('nav.search', language) },
     { to: '/favorites', icon: Heart, label: t('nav.favorites', language) },

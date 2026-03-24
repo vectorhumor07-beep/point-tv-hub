@@ -57,10 +57,8 @@ const LiveTVPage = () => {
           {channels.map(channel => (
             <div
               key={channel.id}
-              onClick={() => handleChannelClick(channel.id)}
-              className={`glass-card-hover p-4 cursor-pointer flex items-center gap-4 ${
-                selectedChannel === channel.id ? 'ring-2 ring-primary' : ''
-              }`}
+              onClick={() => navigate(`/player/channel/${channel.id}`)}
+              className="glass-card-hover p-4 cursor-pointer flex items-center gap-4"
             >
               <img src={channel.logo} alt={channel.name} className="w-14 h-14 rounded-xl object-cover" />
               <div className="flex-1 min-w-0">
@@ -80,94 +78,10 @@ const LiveTVPage = () => {
                 >
                   <Play className="w-4 h-4 fill-current" />
                 </button>
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </div>
             </div>
           ))}
         </div>
-      </div>
-
-      {/* EPG Sidebar */}
-      <div
-        className={`fixed top-[72px] right-0 bottom-0 w-[360px] glass-card border-l border-border/50 z-40 transition-transform duration-300 overflow-hidden ${
-          epgOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
-      >
-        {selectedChannelData && (
-          <div className="h-full flex flex-col">
-            {/* Header */}
-            <div className="p-4 border-b border-border/50 flex items-center gap-3">
-              <img src={selectedChannelData.logo} alt={selectedChannelData.name} className="w-10 h-10 rounded-lg" />
-              <div className="flex-1 min-w-0">
-                <h3 className="font-display font-bold text-sm truncate">{selectedChannelData.name}</h3>
-                <p className="text-xs text-muted-foreground">{language === 'tr' ? 'Program Rehberi' : 'Program Guide'}</p>
-              </div>
-              <button
-                onClick={() => navigate(`/player/channel/${selectedChannelData.id}`)}
-                className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1"
-              >
-                <Play className="w-3 h-3 fill-current" /> {language === 'tr' ? 'İzle' : 'Watch'}
-              </button>
-              <button onClick={() => setEpgOpen(false)} className="p-1.5 rounded-lg hover:bg-secondary">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* EPG List */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
-              {selectedChannelEpg.map((prog, i) => {
-                const start = new Date(prog.startTime);
-                const end = new Date(prog.endTime);
-                const isNow = now >= start && now < end;
-                const isPast = now >= end;
-                const progressPct = isNow
-                  ? ((now.getTime() - start.getTime()) / (end.getTime() - start.getTime())) * 100
-                  : 0;
-
-                return (
-                  <div
-                    key={i}
-                    className={`p-3 rounded-xl transition-all ${
-                      isNow
-                        ? 'bg-primary/15 border border-primary/30'
-                        : isPast
-                        ? 'bg-secondary/30 opacity-50'
-                        : 'bg-secondary/60 hover:bg-secondary'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="text-xs font-mono mt-0.5 w-14 flex-shrink-0">
-                        <p className={isNow ? 'text-primary font-bold' : 'text-muted-foreground'}>
-                          {formatTime(prog.startTime)}
-                        </p>
-                        <p className="text-muted-foreground/60">{formatTime(prog.endTime)}</p>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className={`text-sm font-semibold truncate ${isNow ? 'text-primary' : ''}`}>
-                            {prog.title}
-                          </p>
-                          {isNow && (
-                            <span className="px-1.5 py-0.5 rounded bg-primary text-primary-foreground text-[10px] font-bold flex-shrink-0">
-                              LIVE
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">{prog.description}</p>
-                        {isNow && (
-                          <div className="mt-2 h-1 rounded-full bg-muted overflow-hidden">
-                            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progressPct}%` }} />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   );
 };

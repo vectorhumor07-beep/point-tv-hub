@@ -59,6 +59,7 @@ const App = () => (
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/subscription" element={<SubscriptionPage />} />
               <Route path="/multiscreen" element={<MultiScreenPage />} />
+              <Route path="/epg" element={<EPGPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Layout>
