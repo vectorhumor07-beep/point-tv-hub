@@ -196,44 +196,51 @@ const normalizeHost = (host: string): string => {
   return h;
 };
 
-// CORS proxy for mixed content issues (HTTPS page -> HTTP API)
-const CORS_PROXIES = [
-  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-];
+// Use Supabase edge function as CORS proxy
+const proxyFetch = async (targetUrl: string): Promise<any> => {
+  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-// Base API call with CORS proxy fallback
+  const proxyUrl = `${supabaseUrl}/functions/v1/xtream-proxy`;
+
+  const res = await fetch(proxyUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${anonKey}`,
+    },
+    body: JSON.stringify({ url: targetUrl }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Proxy error: ${res.status} - ${errText}`);
+  }
+
+  return res.json();
+};
+
+// Base API call via proxy
 const apiCall = async (creds: XtreamCredentials, params: Record<string, string> = {}) => {
   const host = normalizeHost(creds.host);
   const url = new URL(`${host}/player_api.php`);
   url.searchParams.set('username', creds.username);
   url.searchParams.set('password', creds.password);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-  
+
   const targetUrl = url.toString();
-  
-  // Try direct first
+
+  // Try direct fetch first (works if same protocol or CORS enabled)
   try {
-    const res = await fetch(targetUrl, { signal: AbortSignal.timeout(8000) });
+    const res = await fetch(targetUrl, { signal: AbortSignal.timeout(5000) });
     if (res.ok) return res.json();
   } catch {
-    // Direct failed (likely CORS/mixed content), try proxies
+    // Direct failed, use proxy
   }
 
-  // Try CORS proxies
-  for (const proxy of CORS_PROXIES) {
-    try {
-      const res = await fetch(proxy(targetUrl), { signal: AbortSignal.timeout(12000) });
-      if (res.ok) {
-        const text = await res.text();
-        return JSON.parse(text);
-      }
-    } catch {
-      continue;
-    }
-  }
-
-  throw new Error('Sunucuya bağlanılamadı. CORS veya ağ hatası.');
+  // Use edge function proxy
+  return proxyFetch(targetUrl);
 };
 
 // Auth & info
