@@ -16,6 +16,9 @@ import SearchPage from "@/pages/SearchPage";
 import FavoritesPage from "@/pages/FavoritesPage";
 import ProfilesPage from "@/pages/ProfilesPage";
 import AdminPage from "@/pages/AdminPage";
+import SettingsPage from "@/pages/SettingsPage";
+import SubscriptionPage from "@/pages/SubscriptionPage";
+import MultiScreenPage from "@/pages/MultiScreenPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +55,9 @@ const App = () => (
               <Route path="/favorites" element={<FavoritesPage />} />
               <Route path="/profiles" element={<ProfilesPage />} />
               <Route path="/admin" element={<AdminPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/subscription" element={<SubscriptionPage />} />
+              <Route path="/multiscreen" element={<MultiScreenPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Layout>
