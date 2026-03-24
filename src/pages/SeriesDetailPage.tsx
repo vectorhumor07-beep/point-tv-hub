@@ -1,9 +1,11 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useRef, useState } from 'react';
 import { getSeries, getMovies } from '@/lib/mockData';
-import { Play, Star, Plus, Heart, ArrowLeft, Clock, Calendar, Check, User, Film } from 'lucide-react';
+import { Play, Star, Plus, Heart, ArrowLeft, Clock, Calendar, Check, User, Film, Volume2, VolumeX } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
-import { useState } from 'react';
 import ContentCard from '@/components/ContentCard';
+
+const TRAILER_URL = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
 
 const SeriesDetailPage = () => {
   const { id } = useParams();
