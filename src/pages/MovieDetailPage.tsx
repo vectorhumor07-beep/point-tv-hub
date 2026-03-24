@@ -1,7 +1,10 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useRef, useEffect, useState } from 'react';
 import { getMovies } from '@/lib/mockData';
 import { useApp } from '@/context/AppContext';
-import { Play, Star, Plus, Heart, Clock, Calendar, User, Film, Check, ArrowLeft } from 'lucide-react';
+import { Play, Star, Plus, Heart, Clock, Calendar, User, Film, Check, ArrowLeft, Volume2, VolumeX } from 'lucide-react';
+
+const TRAILER_URL = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
 
 const MovieDetailPage = () => {
   const { id } = useParams();
@@ -9,6 +12,9 @@ const MovieDetailPage = () => {
   const { watchlist, toggleWatchlist, favorites, toggleFavorite } = useApp();
   const movies = getMovies();
   const movie = movies.find(m => m.id === id);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [trailerMuted, setTrailerMuted] = useState(true);
+  const [trailerLoaded, setTrailerLoaded] = useState(false);
 
   if (!movie) return (
     <div className="min-h-screen pt-20 flex items-center justify-center text-muted-foreground">Film bulunamadı</div>
@@ -20,11 +26,29 @@ const MovieDetailPage = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Backdrop hero */}
+      {/* Backdrop hero with background trailer */}
       <div className="relative h-[65vh] min-h-[450px] overflow-hidden">
-        <img src={movie.poster} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        <img src={movie.poster} alt="" className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${trailerLoaded ? 'opacity-0' : 'opacity-100'}`} />
+        <video
+          ref={videoRef}
+          src={TRAILER_URL}
+          muted={trailerMuted}
+          autoPlay
+          loop
+          playsInline
+          onCanPlay={() => setTrailerLoaded(true)}
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${trailerLoaded ? 'opacity-100' : 'opacity-0'}`}
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/50 to-transparent" />
+
+        {/* Trailer mute toggle */}
+        <button
+          onClick={() => setTrailerMuted(!trailerMuted)}
+          className="absolute top-20 right-6 z-20 p-2.5 rounded-full glass-card hover:bg-foreground/10 transition-colors"
+        >
+          {trailerMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+        </button>
 
         {/* Back button */}
         <button

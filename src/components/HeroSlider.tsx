@@ -101,7 +101,7 @@ const HeroSlider = ({ movies }: HeroSliderProps) => {
               <Play className="w-5 h-5 fill-current" /> İzle
             </button>
             <button
-              onClick={() => navigate(`/player/movie/${movie.id}`)}
+              onClick={() => navigate(`/movie/${movie.id}`)}
               className="flex items-center gap-2 px-6 py-3 rounded-xl glass-card text-foreground font-semibold hover:bg-foreground/10 transition-all"
             >
               <Info className="w-5 h-5" /> Detaylar
