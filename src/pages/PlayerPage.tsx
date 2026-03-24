@@ -2,14 +2,31 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { getChannels, getMovies, getSeries, getEPG } from '@/lib/mockData';
 import { storage } from '@/lib/storage';
 import { useApp } from '@/context/AppContext';
-import { ArrowLeft, Maximize, Volume2, VolumeX, SkipForward, Clock, X } from 'lucide-react';
+import { usePiP } from '@/context/PiPContext';
+import { ArrowLeft, Maximize, Minimize2, Volume2, VolumeX, SkipForward, Clock, X, Languages, Subtitles, PictureInPicture2 } from 'lucide-react';
 import { useRef, useState, useEffect, useMemo } from 'react';
+
+const audioTracks = [
+  { id: 'tr', label: 'Türkçe', language: 'tr' },
+  { id: 'en', label: 'English', language: 'en' },
+  { id: 'de', label: 'Deutsch', language: 'de' },
+  { id: 'fr', label: 'Français', language: 'fr' },
+];
+
+const subtitleTracks = [
+  { id: 'off', label: 'Kapalı / Off' },
+  { id: 'tr', label: 'Türkçe' },
+  { id: 'en', label: 'English' },
+  { id: 'ar', label: 'العربية' },
+  { id: 'de', label: 'Deutsch' },
+];
 
 const PlayerPage = () => {
   const { type, id } = useParams<{ type: string; id: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { language } = useApp();
+  const { openPiP } = usePiP();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
@@ -18,6 +35,10 @@ const PlayerPage = () => {
   const [showControls, setShowControls] = useState(true);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [epgOpen, setEpgOpen] = useState(type === 'channel');
+  const [audioMenuOpen, setAudioMenuOpen] = useState(false);
+  const [subtitleMenuOpen, setSubtitleMenuOpen] = useState(false);
+  const [selectedAudio, setSelectedAudio] = useState('tr');
+  const [selectedSubtitle, setSelectedSubtitle] = useState('off');
   const controlsTimeout = useRef<NodeJS.Timeout>();
 
   const allEpg = getEPG();
@@ -63,6 +84,22 @@ const PlayerPage = () => {
     if (id) storage.addRecentlyWatched(id);
   }, [id]);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case ' ': e.preventDefault(); togglePlay(); break;
+        case 'ArrowLeft': if (videoRef.current) videoRef.current.currentTime -= 10; break;
+        case 'ArrowRight': if (videoRef.current) videoRef.current.currentTime += 10; break;
+        case 'm': case 'M': setIsMuted(p => !p); break;
+        case 'f': case 'F': toggleFullscreen(); break;
+        case 'Escape': if (epgOpen) setEpgOpen(false); break;
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, []);
+
   const handleTimeUpdate = () => {
     if (videoRef.current) {
       setProgress(videoRef.current.currentTime);
@@ -97,9 +134,7 @@ const PlayerPage = () => {
   };
 
   const handleVideoClick = () => {
-    if (type === 'channel') {
-      setEpgOpen(prev => !prev);
-    }
+    if (type === 'channel') setEpgOpen(prev => !prev);
     togglePlay();
   };
 
@@ -109,6 +144,11 @@ const PlayerPage = () => {
     const next = speeds[(idx + 1) % speeds.length];
     setPlaybackRate(next);
     if (videoRef.current) videoRef.current.playbackRate = next;
+  };
+
+  const handlePiP = () => {
+    openPiP({ streamUrl, title, subtitle, contentType: type || '', contentId: id || '' });
+    navigate(-1);
   };
 
   const formatTime = (s: number) => {
@@ -124,12 +164,12 @@ const PlayerPage = () => {
 
   return (
     <div className="fixed inset-0 bg-background z-50 flex" onMouseMove={handleMouseMove}>
-      {/* Video area */}
-      <div className={`flex-1 relative transition-all duration-300 ${epgOpen && type === 'channel' ? 'mr-0' : ''}`} onClick={handleVideoClick}>
+      <div className="flex-1 relative" onClick={handleVideoClick}>
         <video
           ref={videoRef}
           src={streamUrl}
           autoPlay
+          muted={isMuted}
           className="w-full h-full object-contain"
           onTimeUpdate={handleTimeUpdate}
           onLoadedMetadata={() => { if (videoRef.current) setDuration(videoRef.current.duration); }}
@@ -140,6 +180,7 @@ const PlayerPage = () => {
           className={`absolute inset-0 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
           onClick={(e) => e.stopPropagation()}
         >
+          {/* Top bar */}
           <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-background/80 to-transparent flex items-center gap-4">
             <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-secondary/50 transition-colors">
               <ArrowLeft className="w-6 h-6" />
@@ -161,6 +202,7 @@ const PlayerPage = () => {
             )}
           </div>
 
+          {/* Bottom controls */}
           <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background/80 to-transparent">
             <input
               type="range" min={0} max={duration || 1} value={progress} onChange={handleSeek}
@@ -176,17 +218,98 @@ const PlayerPage = () => {
                 </button>
                 <span className="text-xs text-muted-foreground">{formatTime(progress)} / {formatTime(duration)}</span>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                {/* Audio track selector */}
+                <div className="relative">
+                  <button
+                    onClick={() => { setAudioMenuOpen(!audioMenuOpen); setSubtitleMenuOpen(false); }}
+                    className={`p-2 rounded-full transition-colors ${audioMenuOpen ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary/50'}`}
+                    title={language === 'tr' ? 'Ses Dili' : 'Audio Language'}
+                  >
+                    <Languages className="w-5 h-5" />
+                  </button>
+                  {audioMenuOpen && (
+                    <div className="absolute bottom-12 right-0 w-44 glass-card border border-border/50 rounded-lg overflow-hidden shadow-xl z-30">
+                      <div className="p-2 border-b border-border/30">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase">
+                          {language === 'tr' ? 'Ses Dili' : 'Audio Track'}
+                        </p>
+                      </div>
+                      {audioTracks.map(track => (
+                        <button
+                          key={track.id}
+                          onClick={() => { setSelectedAudio(track.id); setAudioMenuOpen(false); }}
+                          className={`w-full text-left px-3 py-2 text-xs hover:bg-secondary/50 transition-colors flex items-center justify-between ${
+                            selectedAudio === track.id ? 'text-primary font-bold' : ''
+                          }`}
+                        >
+                          {track.label}
+                          {selectedAudio === track.id && <span className="text-primary">✓</span>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Subtitle selector */}
+                <div className="relative">
+                  <button
+                    onClick={() => { setSubtitleMenuOpen(!subtitleMenuOpen); setAudioMenuOpen(false); }}
+                    className={`p-2 rounded-full transition-colors ${subtitleMenuOpen ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary/50'}`}
+                    title={language === 'tr' ? 'Altyazı' : 'Subtitles'}
+                  >
+                    <Subtitles className="w-5 h-5" />
+                  </button>
+                  {subtitleMenuOpen && (
+                    <div className="absolute bottom-12 right-0 w-44 glass-card border border-border/50 rounded-lg overflow-hidden shadow-xl z-30">
+                      <div className="p-2 border-b border-border/30">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase">
+                          {language === 'tr' ? 'Altyazı' : 'Subtitles'}
+                        </p>
+                      </div>
+                      {subtitleTracks.map(track => (
+                        <button
+                          key={track.id}
+                          onClick={() => { setSelectedSubtitle(track.id); setSubtitleMenuOpen(false); }}
+                          className={`w-full text-left px-3 py-2 text-xs hover:bg-secondary/50 transition-colors flex items-center justify-between ${
+                            selectedSubtitle === track.id ? 'text-primary font-bold' : ''
+                          }`}
+                        >
+                          {track.label}
+                          {selectedSubtitle === track.id && <span className="text-primary">✓</span>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 <button onClick={changeSpeed} className="px-2 py-1 rounded text-xs bg-secondary hover:bg-secondary/80">{playbackRate}x</button>
+                <button onClick={handlePiP} className="p-2 rounded-full hover:bg-secondary/50" title="PiP">
+                  <PictureInPicture2 className="w-5 h-5" />
+                </button>
                 <button className="p-2 rounded-full hover:bg-secondary/50"><SkipForward className="w-5 h-5" /></button>
                 <button onClick={toggleFullscreen} className="p-2 rounded-full hover:bg-secondary/50"><Maximize className="w-5 h-5" /></button>
               </div>
+            </div>
+
+            {/* Active subtitle/audio indicators */}
+            <div className="flex items-center gap-3 mt-2">
+              {selectedAudio !== 'tr' && (
+                <span className="text-[10px] px-2 py-0.5 rounded bg-secondary text-muted-foreground">
+                  🔊 {audioTracks.find(a => a.id === selectedAudio)?.label}
+                </span>
+              )}
+              {selectedSubtitle !== 'off' && (
+                <span className="text-[10px] px-2 py-0.5 rounded bg-secondary text-muted-foreground">
+                  💬 {subtitleTracks.find(s => s.id === selectedSubtitle)?.label}
+                </span>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* EPG Sidebar - only for channels */}
+      {/* EPG Sidebar */}
       {type === 'channel' && (
         <div className={`h-full bg-background/95 border-l border-border/50 transition-all duration-300 overflow-hidden ${epgOpen ? 'w-[340px]' : 'w-0'}`}>
           <div className="w-[340px] h-full flex flex-col">
