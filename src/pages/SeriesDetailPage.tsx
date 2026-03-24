@@ -1,31 +1,37 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { getSeries } from '@/lib/mockData';
-import { Play, Star, Plus, Heart, ArrowLeft, Clock, Calendar, Check, User } from 'lucide-react';
+import { getSeries, getMovies } from '@/lib/mockData';
+import { Play, Star, Plus, Heart, ArrowLeft, Clock, Calendar, Check, User, Film } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { useState } from 'react';
+import ContentCard from '@/components/ContentCard';
 
 const SeriesDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { watchlist, toggleWatchlist, favorites, toggleFavorite } = useApp();
+  const { language, watchlist, toggleWatchlist, favorites, toggleFavorite } = useApp();
   const series = getSeries().find(s => s.id === id);
+  const allSeries = getSeries().filter(s => s.id !== id);
   const [activeSeason, setActiveSeason] = useState(0);
 
-  if (!series) return <div className="min-h-screen pt-20 px-6 text-center text-muted-foreground">Dizi bulunamadı</div>;
+  if (!series) return <div className="min-h-screen pt-20 px-6 text-center text-muted-foreground">{language === 'tr' ? 'Dizi bulunamadı' : 'Series not found'}</div>;
 
   const season = series.seasons[activeSeason];
   const isInWatchlist = watchlist.includes(series.id);
   const isFavorite = favorites.includes(series.id);
   const totalEpisodes = series.seasons.reduce((acc, s) => acc + s.episodes.length, 0);
+  const similarSeries = allSeries.filter(s => s.genre.some(g => series.genre.includes(g))).slice(0, 6);
 
   return (
     <div className="min-h-screen">
-      {/* Backdrop hero */}
-      <div className="relative h-[55vh] min-h-[400px] overflow-hidden">
-        <div className="absolute inset-0" style={{
-          background: `linear-gradient(135deg, hsl(var(--primary) / 0.15), hsl(var(--background)))`,
-        }} />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+      {/* Backdrop hero with poster */}
+      <div className="relative h-[60vh] min-h-[450px] overflow-hidden">
+        <img
+          src={series.poster}
+          alt={series.title}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/80 to-transparent" />
 
         <button
           onClick={() => navigate(-1)}
@@ -40,7 +46,7 @@ const SeriesDetailPage = () => {
               <img
                 src={series.poster}
                 alt={series.title}
-                className="w-48 h-72 rounded-xl object-cover shadow-2xl ring-1 ring-border/20"
+                className="w-52 h-80 rounded-xl object-cover shadow-2xl ring-1 ring-border/20"
               />
             </div>
 
@@ -62,21 +68,27 @@ const SeriesDetailPage = () => {
                   <Calendar className="w-4 h-4" /> {series.year}
                 </span>
                 <span className="flex items-center gap-1.5 text-muted-foreground">
-                  <Clock className="w-4 h-4" /> {series.seasons.length} Sezon
+                  <Film className="w-4 h-4" /> {series.seasons.length} {language === 'tr' ? 'Sezon' : 'Seasons'}
                 </span>
-                <span className="text-muted-foreground">{totalEpisodes} Bölüm</span>
+                <span className="text-muted-foreground">{totalEpisodes} {language === 'tr' ? 'Bölüm' : 'Episodes'}</span>
               </div>
 
               <p className="text-muted-foreground text-sm md:text-base leading-relaxed mb-6 max-w-2xl">
                 {series.description}
               </p>
 
+              {/* Cast info */}
+              <div className="flex items-center gap-2 mb-6 text-sm text-muted-foreground">
+                <User className="w-4 h-4" />
+                <span>{language === 'tr' ? 'Oyuncular' : 'Cast'}: Tom Hardy, Florence Pugh, Oscar Isaac</span>
+              </div>
+
               <div className="flex flex-wrap items-center gap-3">
                 <button
                   onClick={() => navigate(`/player/series/${series.id}?s=1&e=1`)}
                   className="flex items-center gap-2.5 px-8 py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-lg hover:opacity-90 transition-all hover:scale-105 glow-accent"
                 >
-                  <Play className="w-5 h-5 fill-current" /> S1E1 İzle
+                  <Play className="w-5 h-5 fill-current" /> S1E1 {language === 'tr' ? 'İzle' : 'Watch'}
                 </button>
                 <button
                   onClick={() => toggleWatchlist(series.id)}
@@ -85,7 +97,7 @@ const SeriesDetailPage = () => {
                   }`}
                 >
                   {isInWatchlist ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-                  {isInWatchlist ? 'Listede' : 'Listeye Ekle'}
+                  {isInWatchlist ? (language === 'tr' ? 'Listede' : 'In List') : (language === 'tr' ? 'Listeye Ekle' : 'Add to List')}
                 </button>
                 <button
                   onClick={() => toggleFavorite(series.id)}
@@ -115,7 +127,7 @@ const SeriesDetailPage = () => {
                   : 'glass-card hover:bg-foreground/10'
               }`}
             >
-              Sezon {s.number}
+              {language === 'tr' ? 'Sezon' : 'Season'} {s.number}
             </button>
           ))}
         </div>
@@ -129,24 +141,43 @@ const SeriesDetailPage = () => {
               className="glass-card-hover flex items-center gap-5 p-4 cursor-pointer group"
             >
               <div className="relative flex-shrink-0 overflow-hidden rounded-lg">
-                <img src={ep.thumbnail} alt={ep.title} className="w-36 h-20 object-cover" loading="lazy" />
+                <img src={ep.thumbnail} alt={ep.title} className="w-40 h-24 object-cover" loading="lazy" />
                 <div className="absolute inset-0 flex items-center justify-center bg-background/40 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Play className="w-8 h-8 text-primary fill-current" />
                 </div>
+                <div className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-background/80 text-[10px] font-mono">
+                  {ep.duration} {language === 'tr' ? 'dk' : 'min'}
+                </div>
               </div>
               <div className="flex-1 min-w-0">
-                <h4 className="font-display font-bold text-sm mb-1">Bölüm {ep.number}: {ep.title}</h4>
-                <p className="text-xs text-muted-foreground line-clamp-1 mb-1">{ep.description}</p>
+                <h4 className="font-display font-bold text-sm mb-1">
+                  {language === 'tr' ? 'Bölüm' : 'Episode'} {ep.number}: {ep.title}
+                </h4>
+                <p className="text-xs text-muted-foreground line-clamp-2 mb-1.5">{ep.description}</p>
                 <span className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Clock className="w-3 h-3" /> {ep.duration} dk
+                  <Clock className="w-3 h-3" /> {ep.duration} {language === 'tr' ? 'dk' : 'min'}
                 </span>
               </div>
-              <div className="text-2xl font-display font-bold text-muted-foreground/30">
+              <div className="text-3xl font-display font-bold text-muted-foreground/20">
                 {ep.number.toString().padStart(2, '0')}
               </div>
             </div>
           ))}
         </div>
+
+        {/* Similar Series */}
+        {similarSeries.length > 0 && (
+          <div className="mt-12">
+            <h2 className="font-display text-xl font-bold mb-4">
+              {language === 'tr' ? 'Benzer Diziler' : 'Similar Series'}
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {similarSeries.map(s => (
+                <ContentCard key={s.id} item={s} type="series" />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
