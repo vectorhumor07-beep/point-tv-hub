@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { Language, UserProfile } from '@/lib/types';
 import { storage } from '@/lib/storage';
+import { XtreamCredentials, getCredentials, clearCredentials } from '@/services/xtreamApi';
 
 interface AppContextType {
   language: Language;
@@ -14,6 +15,11 @@ interface AppContextType {
   toggleWatchlist: (id: string) => void;
   favorites: string[];
   toggleFavorite: (id: string) => void;
+  // Xtream
+  xtreamCreds: XtreamCredentials | null;
+  setXtreamCreds: (creds: XtreamCredentials | null) => void;
+  isXtreamMode: boolean;
+  logout: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -31,6 +37,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [kidsMode, setKids] = useState(storage.isKidsMode());
   const [watchlist, setWatchlist] = useState(storage.getWatchlist());
   const [favorites, setFavorites] = useState(storage.getFavorites());
+  const [xtreamCreds, setXtreamCredsState] = useState<XtreamCredentials | null>(getCredentials());
+
+  const isXtreamMode = !!xtreamCreds && xtreamCreds.host !== 'demo';
 
   const setLanguage = useCallback((l: Language) => {
     setLang(l);
@@ -60,6 +69,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setFavorites(storage.toggleFavorite(id));
   }, []);
 
+  const setXtreamCreds = useCallback((creds: XtreamCredentials | null) => {
+    setXtreamCredsState(creds);
+  }, []);
+
+  const logout = useCallback(() => {
+    clearCredentials();
+    setXtreamCredsState(null);
+  }, []);
+
   const activeProfile = profiles.find(p => p.id === activeProfileId) || null;
 
   return (
@@ -69,6 +87,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       kidsMode, setKidsMode,
       watchlist, toggleWatchlist,
       favorites, toggleFavorite,
+      xtreamCreds, setXtreamCreds, isXtreamMode, logout,
     }}>
       {children}
     </AppContext.Provider>
