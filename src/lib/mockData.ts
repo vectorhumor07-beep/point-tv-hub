@@ -120,45 +120,48 @@ export const generateMovies = (): Movie[] => {
 };
 
 const seriesTitles = [
-  { title: 'The Empire', genre: ['Drama', 'History'], year: 2023, seasons: 3 },
-  { title: 'Cyber City', genre: ['Sci-Fi', 'Thriller'], year: 2024, seasons: 2 },
-  { title: 'Family Matters', genre: ['Comedy', 'Drama'], year: 2023, seasons: 4 },
-  { title: 'Dark Waters', genre: ['Crime', 'Mystery'], year: 2024, seasons: 2 },
-  { title: 'The Healer', genre: ['Drama', 'Medical'], year: 2023, seasons: 3 },
-  { title: 'Frontier', genre: ['Western', 'Action'], year: 2024, seasons: 2 },
-  { title: 'Mind Games', genre: ['Psychological', 'Thriller'], year: 2023, seasons: 1 },
-  { title: 'Rising Stars', genre: ['Drama', 'Music'], year: 2024, seasons: 2 },
-  { title: 'The Bureau', genre: ['Spy', 'Thriller'], year: 2023, seasons: 5 },
-  { title: 'Legends of Tomorrow', genre: ['Sci-Fi', 'Adventure'], year: 2024, seasons: 3 },
-  { title: 'Street Kings', genre: ['Crime', 'Action'], year: 2023, seasons: 2 },
-  { title: 'The Colony', genre: ['Sci-Fi', 'Drama'], year: 2024, seasons: 1 },
+  { title: 'The Empire', genre: ['Drama', 'History'], year: 2023, seasons: 3, posterKey: 'series-the-empire' },
+  { title: 'Cyber City', genre: ['Sci-Fi', 'Thriller'], year: 2024, seasons: 2, posterKey: 'series-cyber-city' },
+  { title: 'Family Matters', genre: ['Comedy', 'Drama'], year: 2023, seasons: 4, posterKey: 'series-family-matters' },
+  { title: 'Dark Waters', genre: ['Crime', 'Mystery'], year: 2024, seasons: 2, posterKey: 'series-dark-waters' },
+  { title: 'The Healer', genre: ['Drama', 'Medical'], year: 2023, seasons: 3, posterKey: 'series-the-healer' },
+  { title: 'Frontier', genre: ['Western', 'Action'], year: 2024, seasons: 2, posterKey: 'series-frontier' },
+  { title: 'Mind Games', genre: ['Psychological', 'Thriller'], year: 2023, seasons: 1, posterKey: 'series-mind-games' },
+  { title: 'Rising Stars', genre: ['Drama', 'Music'], year: 2024, seasons: 2, posterKey: 'series-rising-stars' },
+  { title: 'The Bureau', genre: ['Spy', 'Thriller'], year: 2023, seasons: 5, posterKey: 'series-the-bureau' },
+  { title: 'Legends of Tomorrow', genre: ['Sci-Fi', 'Adventure'], year: 2024, seasons: 3, posterKey: 'series-legends-tomorrow' },
+  { title: 'Street Kings', genre: ['Crime', 'Action'], year: 2023, seasons: 2, posterKey: 'series-street-kings' },
+  { title: 'The Colony', genre: ['Sci-Fi', 'Drama'], year: 2024, seasons: 1, posterKey: 'series-the-colony' },
 ];
 
-const seriesColors = ['C0392B', '2980B9', 'F39C12', '8E44AD', '27AE60', 'D35400', '16A085', '2C3E50', 'E74C3C', '1ABC9C', '34495E', '9B59B6'];
-
 export const generateSeries = (): Series[] => {
-  return seriesTitles.map((s, i) => ({
-    id: `series-${i + 1}`,
-    title: s.title,
-    poster: `https://ui-avatars.com/api/?name=${encodeURIComponent(s.title)}&background=${seriesColors[i]}&color=fff&size=300&font-size=0.25&bold=true`,
-    backdrop: `https://ui-avatars.com/api/?name=${encodeURIComponent(s.title)}&background=${seriesColors[i]}&color=fff&size=1200&font-size=0.15`,
-    description: `An acclaimed ${s.genre[0].toLowerCase()} series that has captivated audiences worldwide. ${s.title} delivers compelling storytelling across ${s.seasons} seasons of unforgettable television.`,
-    genre: s.genre,
-    rating: Math.round((7 + Math.random() * 2.5) * 10) / 10,
-    year: s.year,
-    seasons: Array.from({ length: s.seasons }, (_, si) => ({
-      number: si + 1,
-      episodes: Array.from({ length: 8 + Math.floor(Math.random() * 5) }, (_, ei) => ({
-        id: `series-${i + 1}-s${si + 1}-e${ei + 1}`,
-        number: ei + 1,
-        title: `Episode ${ei + 1}`,
-        description: `Season ${si + 1}, Episode ${ei + 1} of ${s.title}. An intense chapter that pushes the story forward.`,
-        duration: 25 + Math.floor(Math.random() * 40),
-        thumbnail: `https://ui-avatars.com/api/?name=S${si + 1}E${ei + 1}&background=${seriesColors[(i + ei) % seriesColors.length]}&color=fff&size=320&font-size=0.3`,
-        streamUrl: SAMPLE_VIDEO,
+  const posters = getPosters();
+  return seriesTitles.map((s, i) => {
+    const realPoster = s.posterKey ? posters[s.posterKey] : undefined;
+    const fallbackPoster = `https://ui-avatars.com/api/?name=${encodeURIComponent(s.title)}&background=1a1a2e&color=fff&size=300&font-size=0.25&bold=true`;
+    return {
+      id: `series-${i + 1}`,
+      title: s.title,
+      poster: realPoster || fallbackPoster,
+      backdrop: realPoster || fallbackPoster,
+      description: `An acclaimed ${s.genre[0].toLowerCase()} series that has captivated audiences worldwide. ${s.title} delivers compelling storytelling across ${s.seasons} seasons of unforgettable television.`,
+      genre: s.genre,
+      rating: Math.round((7 + Math.random() * 2.5) * 10) / 10,
+      year: s.year,
+      seasons: Array.from({ length: s.seasons }, (_, si) => ({
+        number: si + 1,
+        episodes: Array.from({ length: 8 + Math.floor(Math.random() * 5) }, (_, ei) => ({
+          id: `series-${i + 1}-s${si + 1}-e${ei + 1}`,
+          number: ei + 1,
+          title: `Episode ${ei + 1}`,
+          description: `Season ${si + 1}, Episode ${ei + 1} of ${s.title}. An intense chapter that pushes the story forward.`,
+          duration: 25 + Math.floor(Math.random() * 40),
+          thumbnail: realPoster || fallbackPoster,
+          streamUrl: SAMPLE_VIDEO,
+        })),
       })),
-    })),
-  }));
+    };
+  });
 };
 
 const epgShowNames = [
