@@ -14,6 +14,9 @@ const SeriesDetailPage = () => {
   const series = getSeries().find(s => s.id === id);
   const allSeries = getSeries().filter(s => s.id !== id);
   const [activeSeason, setActiveSeason] = useState(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [trailerMuted, setTrailerMuted] = useState(true);
+  const [trailerLoaded, setTrailerLoaded] = useState(false);
 
   if (!series) return <div className="min-h-screen pt-20 px-6 text-center text-muted-foreground">{language === 'tr' ? 'Dizi bulunamadı' : 'Series not found'}</div>;
 
