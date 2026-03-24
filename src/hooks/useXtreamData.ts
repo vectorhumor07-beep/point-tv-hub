@@ -24,7 +24,7 @@ export const useXtreamLive = () => {
   const { xtreamCreds, isXtreamMode } = useApp();
   const [categories, setCategories] = useState<XtreamCategory[]>([]);
   const [streams, setStreams] = useState<XtreamLiveStream[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(isXtreamMode && !!xtreamCreds);
 
   useEffect(() => {
     if (!isXtreamMode || !xtreamCreds) return;
@@ -45,7 +45,7 @@ export const useXtreamVod = () => {
   const { xtreamCreds, isXtreamMode } = useApp();
   const [categories, setCategories] = useState<XtreamCategory[]>([]);
   const [streams, setStreams] = useState<XtreamVodStream[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(isXtreamMode && !!xtreamCreds);
 
   useEffect(() => {
     if (!isXtreamMode || !xtreamCreds) return;
@@ -66,7 +66,7 @@ export const useXtreamSeries = () => {
   const { xtreamCreds, isXtreamMode } = useApp();
   const [categories, setCategories] = useState<XtreamCategory[]>([]);
   const [streams, setStreams] = useState<XtreamSeriesItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(isXtreamMode && !!xtreamCreds);
 
   useEffect(() => {
     if (!isXtreamMode || !xtreamCreds) return;
