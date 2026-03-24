@@ -1,12 +1,12 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Tv, Film, MonitorPlay, Search, Heart, Settings, Globe, Monitor, CreditCard, Clock, Rewind } from 'lucide-react';
+import { Home, Tv, Film, MonitorPlay, Search, Heart, Settings, Globe, Monitor, CreditCard, Clock, Rewind, LogOut } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { t } from '@/lib/i18n';
 import NotificationSystem from '@/components/NotificationSystem';
 import pointtvLogo from '@/assets/pointtv-logo.jpg';
 
 const Header = () => {
-  const { language, setLanguage, activeProfile } = useApp();
+  const { language, setLanguage, activeProfile, logout, isXtreamMode } = useApp();
   const location = useLocation();
 
   const navItems = [
@@ -63,6 +63,14 @@ const Header = () => {
           <Link to="/settings" className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
             <Settings className="w-4 h-4" />
           </Link>
+
+          <button
+            onClick={logout}
+            className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+            title={language === 'tr' ? 'Çıkış' : 'Logout'}
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
 
           <Link to="/profiles" className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center text-lg ring-2 ring-primary/30">

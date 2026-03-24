@@ -3,8 +3,9 @@ import { getChannels, getMovies, getSeries, getEPG } from '@/lib/mockData';
 import { storage } from '@/lib/storage';
 import { useApp } from '@/context/AppContext';
 import { usePiP } from '@/context/PiPContext';
-import { ArrowLeft, Maximize, Minimize2, Volume2, VolumeX, SkipForward, Clock, X, Languages, Subtitles, PictureInPicture2 } from 'lucide-react';
+import { ArrowLeft, Maximize, Volume2, VolumeX, SkipForward, Clock, X, Languages, Subtitles, PictureInPicture2 } from 'lucide-react';
 import { useRef, useState, useEffect, useMemo } from 'react';
+import { buildLiveStreamUrl, buildVodStreamUrl, buildSeriesStreamUrl } from '@/services/xtreamApi';
 
 const audioTracks = [
   { id: 'tr', label: 'Türkçe', language: 'tr' },
@@ -25,7 +26,7 @@ const PlayerPage = () => {
   const { type, id } = useParams<{ type: string; id: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { language } = useApp();
+  const { language, isXtreamMode, xtreamCreds } = useApp();
   const { openPiP } = usePiP();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -48,25 +49,43 @@ const PlayerPage = () => {
   let streamUrl = '';
   let subtitle = '';
 
-  if (type === 'channel') {
-    const channel = getChannels().find(c => c.id === id);
-    title = channel?.name || 'Channel';
-    streamUrl = channel?.streamUrl || '';
-    subtitle = channel?.nowPlaying || '';
-  } else if (type === 'movie') {
-    const movie = getMovies().find(m => m.id === id);
-    title = movie?.title || 'Movie';
-    streamUrl = movie?.streamUrl || '';
-    subtitle = movie ? `${movie.year} · ${movie.genre.join(', ')}` : '';
-  } else if (type === 'series') {
-    const s = getSeries().find(s => s.id === id);
-    const sNum = parseInt(searchParams.get('s') || '1');
-    const eNum = parseInt(searchParams.get('e') || '1');
-    const season = s?.seasons.find(se => se.number === sNum);
-    const episode = season?.episodes.find(ep => ep.number === eNum);
-    title = s?.title || 'Series';
-    streamUrl = episode?.streamUrl || '';
-    subtitle = `S${sNum}E${eNum} - ${episode?.title || ''}`;
+  if (isXtreamMode && xtreamCreds && id) {
+    const streamId = parseInt(id);
+    if (type === 'channel') {
+      streamUrl = buildLiveStreamUrl(xtreamCreds, streamId);
+      title = `Channel ${id}`;
+    } else if (type === 'movie') {
+      const ext = searchParams.get('ext') || 'mp4';
+      streamUrl = buildVodStreamUrl(xtreamCreds, streamId, ext);
+      title = searchParams.get('title') || `Movie ${id}`;
+    } else if (type === 'series') {
+      const ext = searchParams.get('ext') || 'mp4';
+      streamUrl = buildSeriesStreamUrl(xtreamCreds, streamId, ext);
+      title = searchParams.get('title') || `Episode`;
+      subtitle = `S${searchParams.get('s') || '1'}E${searchParams.get('e') || '1'}`;
+    }
+  } else {
+    // Mock data mode
+    if (type === 'channel') {
+      const channel = getChannels().find(c => c.id === id);
+      title = channel?.name || 'Channel';
+      streamUrl = channel?.streamUrl || '';
+      subtitle = channel?.nowPlaying || '';
+    } else if (type === 'movie') {
+      const movie = getMovies().find(m => m.id === id);
+      title = movie?.title || 'Movie';
+      streamUrl = movie?.streamUrl || '';
+      subtitle = movie ? `${movie.year} · ${movie.genre.join(', ')}` : '';
+    } else if (type === 'series') {
+      const s = getSeries().find(s => s.id === id);
+      const sNum = parseInt(searchParams.get('s') || '1');
+      const eNum = parseInt(searchParams.get('e') || '1');
+      const season = s?.seasons.find(se => se.number === sNum);
+      const episode = season?.episodes.find(ep => ep.number === eNum);
+      title = s?.title || 'Series';
+      streamUrl = episode?.streamUrl || '';
+      subtitle = `S${sNum}E${eNum} - ${episode?.title || ''}`;
+    }
   }
 
   if (!streamUrl) {
@@ -74,17 +93,16 @@ const PlayerPage = () => {
   }
 
   const channelEpg = useMemo(() => {
-    if (type !== 'channel' || !id) return [];
+    if (type !== 'channel' || !id || isXtreamMode) return [];
     return allEpg
       .filter(e => e.channelId === id)
       .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
-  }, [type, id, allEpg]);
+  }, [type, id, allEpg, isXtreamMode]);
 
   useEffect(() => {
     if (id) storage.addRecentlyWatched(id);
   }, [id]);
 
-  // Keyboard shortcuts
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       switch (e.key) {
@@ -189,7 +207,7 @@ const PlayerPage = () => {
               <h2 className="font-display font-bold">{title}</h2>
               <p className="text-xs text-muted-foreground">{subtitle}</p>
             </div>
-            {type === 'channel' && (
+            {type === 'channel' && !isXtreamMode && (
               <button
                 onClick={() => setEpgOpen(!epgOpen)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
@@ -219,30 +237,21 @@ const PlayerPage = () => {
                 <span className="text-xs text-muted-foreground">{formatTime(progress)} / {formatTime(duration)}</span>
               </div>
               <div className="flex items-center gap-2">
-                {/* Audio track selector */}
                 <div className="relative">
                   <button
                     onClick={() => { setAudioMenuOpen(!audioMenuOpen); setSubtitleMenuOpen(false); }}
                     className={`p-2 rounded-full transition-colors ${audioMenuOpen ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary/50'}`}
-                    title={language === 'tr' ? 'Ses Dili' : 'Audio Language'}
                   >
                     <Languages className="w-5 h-5" />
                   </button>
                   {audioMenuOpen && (
                     <div className="absolute bottom-12 right-0 w-44 glass-card border border-border/50 rounded-lg overflow-hidden shadow-xl z-30">
                       <div className="p-2 border-b border-border/30">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase">
-                          {language === 'tr' ? 'Ses Dili' : 'Audio Track'}
-                        </p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Audio Track</p>
                       </div>
                       {audioTracks.map(track => (
-                        <button
-                          key={track.id}
-                          onClick={() => { setSelectedAudio(track.id); setAudioMenuOpen(false); }}
-                          className={`w-full text-left px-3 py-2 text-xs hover:bg-secondary/50 transition-colors flex items-center justify-between ${
-                            selectedAudio === track.id ? 'text-primary font-bold' : ''
-                          }`}
-                        >
+                        <button key={track.id} onClick={() => { setSelectedAudio(track.id); setAudioMenuOpen(false); }}
+                          className={`w-full text-left px-3 py-2 text-xs hover:bg-secondary/50 transition-colors flex items-center justify-between ${selectedAudio === track.id ? 'text-primary font-bold' : ''}`}>
                           {track.label}
                           {selectedAudio === track.id && <span className="text-primary">✓</span>}
                         </button>
@@ -251,30 +260,21 @@ const PlayerPage = () => {
                   )}
                 </div>
 
-                {/* Subtitle selector */}
                 <div className="relative">
                   <button
                     onClick={() => { setSubtitleMenuOpen(!subtitleMenuOpen); setAudioMenuOpen(false); }}
                     className={`p-2 rounded-full transition-colors ${subtitleMenuOpen ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary/50'}`}
-                    title={language === 'tr' ? 'Altyazı' : 'Subtitles'}
                   >
                     <Subtitles className="w-5 h-5" />
                   </button>
                   {subtitleMenuOpen && (
                     <div className="absolute bottom-12 right-0 w-44 glass-card border border-border/50 rounded-lg overflow-hidden shadow-xl z-30">
                       <div className="p-2 border-b border-border/30">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase">
-                          {language === 'tr' ? 'Altyazı' : 'Subtitles'}
-                        </p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Subtitles</p>
                       </div>
                       {subtitleTracks.map(track => (
-                        <button
-                          key={track.id}
-                          onClick={() => { setSelectedSubtitle(track.id); setSubtitleMenuOpen(false); }}
-                          className={`w-full text-left px-3 py-2 text-xs hover:bg-secondary/50 transition-colors flex items-center justify-between ${
-                            selectedSubtitle === track.id ? 'text-primary font-bold' : ''
-                          }`}
-                        >
+                        <button key={track.id} onClick={() => { setSelectedSubtitle(track.id); setSubtitleMenuOpen(false); }}
+                          className={`w-full text-left px-3 py-2 text-xs hover:bg-secondary/50 transition-colors flex items-center justify-between ${selectedSubtitle === track.id ? 'text-primary font-bold' : ''}`}>
                           {track.label}
                           {selectedSubtitle === track.id && <span className="text-primary">✓</span>}
                         </button>
@@ -292,7 +292,6 @@ const PlayerPage = () => {
               </div>
             </div>
 
-            {/* Active subtitle/audio indicators */}
             <div className="flex items-center gap-3 mt-2">
               {selectedAudio !== 'tr' && (
                 <span className="text-[10px] px-2 py-0.5 rounded bg-secondary text-muted-foreground">
@@ -309,8 +308,8 @@ const PlayerPage = () => {
         </div>
       </div>
 
-      {/* EPG Sidebar */}
-      {type === 'channel' && (
+      {/* EPG Sidebar - only in mock mode */}
+      {type === 'channel' && !isXtreamMode && (
         <div className={`h-full bg-background/95 border-l border-border/50 transition-all duration-300 overflow-hidden ${epgOpen ? 'w-[340px]' : 'w-0'}`}>
           <div className="w-[340px] h-full flex flex-col">
             <div className="p-3 border-b border-border/50 flex items-center justify-between">
@@ -322,26 +321,15 @@ const PlayerPage = () => {
                 <X className="w-4 h-4" />
               </button>
             </div>
-
             <div className="flex-1 overflow-y-auto p-2 space-y-1">
               {channelEpg.map((prog, i) => {
                 const start = new Date(prog.startTime);
                 const end = new Date(prog.endTime);
                 const isNow = now >= start && now < end;
                 const isPast = now >= end;
-                const progressPct = isNow
-                  ? ((now.getTime() - start.getTime()) / (end.getTime() - start.getTime())) * 100
-                  : 0;
-
+                const progressPct = isNow ? ((now.getTime() - start.getTime()) / (end.getTime() - start.getTime())) * 100 : 0;
                 return (
-                  <div
-                    key={i}
-                    className={`p-2.5 rounded-lg transition-all ${
-                      isNow ? 'bg-primary/15 border border-primary/30'
-                        : isPast ? 'bg-secondary/20 opacity-40'
-                        : 'bg-secondary/40 hover:bg-secondary/60'
-                    }`}
-                  >
+                  <div key={i} className={`p-2.5 rounded-lg transition-all ${isNow ? 'bg-primary/15 border border-primary/30' : isPast ? 'bg-secondary/20 opacity-40' : 'bg-secondary/40 hover:bg-secondary/60'}`}>
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className={`text-[10px] font-mono ${isNow ? 'text-primary font-bold' : 'text-muted-foreground'}`}>
                         {formatEpgTime(prog.startTime)} - {formatEpgTime(prog.endTime)}
