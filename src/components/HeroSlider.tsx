@@ -65,9 +65,21 @@ const HeroSlider = ({ movies }: HeroSliderProps) => {
     videoRefs.current.forEach((video, i) => {
       if (!video) return;
       if (i === current) {
-        video.currentTime = 0;
-        video.muted = isMuted;
-        video.play().catch(() => {});
+        // Random start point between 10% and 70% of duration
+        const setRandomStart = () => {
+          if (video.duration && video.duration > 10) {
+            const minStart = video.duration * 0.1;
+            const maxStart = video.duration * 0.7;
+            video.currentTime = minStart + Math.random() * (maxStart - minStart);
+          }
+          video.muted = isMuted;
+          video.play().catch(() => {});
+        };
+        if (video.readyState >= 1) {
+          setRandomStart();
+        } else {
+          video.addEventListener('loadedmetadata', setRandomStart, { once: true });
+        }
       } else {
         video.pause();
       }
