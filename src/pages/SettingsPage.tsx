@@ -398,6 +398,73 @@ const SettingsPage = () => {
             </div>
           )}
 
+          {/* Notifications */}
+          {tab === 'notifications' && (
+            <div className="space-y-4">
+              <div className="glass-card p-6">
+                <h2 className="font-display text-xl font-bold mb-4 flex items-center gap-2">
+                  <Bell className="w-5 h-5 text-primary" />
+                  {language === 'tr' ? 'Bildirim Ayarları' : 'Notification Settings'}
+                </h2>
+                <div className="space-y-4">
+                  {[
+                    { label: language === 'tr' ? 'Yeni İçerik Bildirimleri' : 'New Content Alerts', desc: language === 'tr' ? 'Yeni filmler ve diziler eklendiğinde bildir' : 'Get notified when new movies and series are added', state: notifNewContent, toggle: () => setNotifNewContent(!notifNewContent) },
+                    { label: language === 'tr' ? 'Uygulama Güncellemeleri' : 'App Updates', desc: language === 'tr' ? 'Yeni özellikler hakkında bilgi al' : 'Get info about new features', state: notifUpdates, toggle: () => setNotifUpdates(!notifUpdates) },
+                    { label: language === 'tr' ? 'Kişisel Öneriler' : 'Recommendations', desc: language === 'tr' ? 'Size özel içerik önerileri alın' : 'Get personalized content suggestions', state: notifRecommendations, toggle: () => setNotifRecommendations(!notifRecommendations) },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-secondary">
+                      <div>
+                        <p className="font-semibold text-sm">{item.label}</p>
+                        <p className="text-xs text-muted-foreground">{item.desc}</p>
+                      </div>
+                      <button
+                        onClick={item.toggle}
+                        className={`w-14 h-7 rounded-full transition-colors relative ${item.state ? 'bg-primary' : 'bg-muted'}`}
+                      >
+                        <div className={`w-5 h-5 rounded-full bg-foreground absolute top-1 transition-all ${item.state ? 'right-1' : 'left-1'}`} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Storage */}
+          {tab === 'storage' && (
+            <div className="space-y-4">
+              <div className="glass-card p-6">
+                <h2 className="font-display text-xl font-bold mb-4 flex items-center gap-2">
+                  <HardDrive className="w-5 h-5 text-primary" />
+                  {language === 'tr' ? 'Depolama & Veri Kullanımı' : 'Storage & Data Usage'}
+                </h2>
+                <div className="space-y-4">
+                  {[
+                    { label: language === 'tr' ? 'Önbellek' : 'Cache', value: dataUsage.cached, icon: '📦' },
+                    { label: language === 'tr' ? 'İndirilenler' : 'Downloads', value: dataUsage.downloads, icon: '⬇️' },
+                    { label: language === 'tr' ? 'Toplam Kullanım' : 'Total Usage', value: dataUsage.total, icon: '💾' },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-secondary">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">{item.icon}</span>
+                        <span className="text-sm font-semibold">{item.label}</span>
+                      </div>
+                      <span className="font-mono text-sm">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-3 mt-6">
+                  <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-destructive/20 text-destructive text-sm font-semibold hover:bg-destructive/30 transition-colors">
+                    <Trash2 className="w-4 h-4" /> {language === 'tr' ? 'Önbelleği Temizle' : 'Clear Cache'}
+                  </button>
+                  <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-secondary text-sm font-semibold hover:bg-secondary/80 transition-colors">
+                    <RotateCcw className="w-4 h-4" /> {language === 'tr' ? 'Verileri Sıfırla' : 'Reset Data'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Device Info */}
           {tab === 'device' && (
             <div className="space-y-4">
@@ -418,6 +485,47 @@ const SettingsPage = () => {
                     <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-secondary">
                       <span className="text-sm text-muted-foreground">{item.label}</span>
                       <span className="font-mono text-sm font-semibold">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* About */}
+          {tab === 'about' && (
+            <div className="space-y-4">
+              <div className="glass-card p-6">
+                <h2 className="font-display text-xl font-bold mb-4 flex items-center gap-2">
+                  <Info className="w-5 h-5 text-primary" />
+                  {language === 'tr' ? 'Uygulama Hakkında' : 'About App'}
+                </h2>
+                <div className="text-center py-8">
+                  <div className="text-5xl mb-4">📺</div>
+                  <h3 className="font-display text-2xl font-bold mb-2">Point TV</h3>
+                  <p className="text-muted-foreground text-sm mb-4">v2.4.1 (Build 2024.03.24)</p>
+                  <p className="text-muted-foreground text-sm max-w-md mx-auto mb-6">
+                    {language === 'tr'
+                      ? 'Point TV, premium IPTV/OTT deneyimi sunan modern bir WebTV platformudur. Canlı TV, filmler, diziler ve daha fazlası.'
+                      : 'Point TV is a modern WebTV platform delivering premium IPTV/OTT experience. Live TV, movies, series and more.'}
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-2 text-xs text-muted-foreground">
+                    <span className="px-3 py-1 rounded-full bg-secondary">React 18</span>
+                    <span className="px-3 py-1 rounded-full bg-secondary">TypeScript</span>
+                    <span className="px-3 py-1 rounded-full bg-secondary">HLS.js</span>
+                    <span className="px-3 py-1 rounded-full bg-secondary">Tailwind CSS</span>
+                  </div>
+                </div>
+                <div className="space-y-3 pt-4 border-t border-border">
+                  {[
+                    { label: language === 'tr' ? 'Geliştirici' : 'Developer', value: 'Point TV Team' },
+                    { label: language === 'tr' ? 'Lisans' : 'License', value: 'Commercial' },
+                    { label: language === 'tr' ? 'Destek' : 'Support', value: 'support@pointtv.io' },
+                    { label: 'Website', value: 'www.pointtv.io' },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-secondary text-sm">
+                      <span className="text-muted-foreground">{item.label}</span>
+                      <span className="font-semibold">{item.value}</span>
                     </div>
                   ))}
                 </div>

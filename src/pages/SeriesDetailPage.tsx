@@ -25,15 +25,33 @@ const SeriesDetailPage = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Backdrop hero with poster */}
+      {/* Backdrop hero with background trailer */}
       <div className="relative h-[60vh] min-h-[450px] overflow-hidden">
         <img
           src={series.poster}
           alt={series.title}
-          className="absolute inset-0 w-full h-full object-cover"
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${trailerLoaded ? 'opacity-0' : 'opacity-100'}`}
+        />
+        <video
+          ref={videoRef}
+          src={TRAILER_URL}
+          muted={trailerMuted}
+          autoPlay
+          loop
+          playsInline
+          onCanPlay={() => setTrailerLoaded(true)}
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${trailerLoaded ? 'opacity-100' : 'opacity-0'}`}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/80 to-transparent" />
+
+        {/* Trailer mute toggle */}
+        <button
+          onClick={() => setTrailerMuted(!trailerMuted)}
+          className="absolute top-20 right-6 z-20 p-2.5 rounded-full glass-card hover:bg-foreground/10 transition-colors"
+        >
+          {trailerMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+        </button>
 
         <button
           onClick={() => navigate(-1)}
