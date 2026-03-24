@@ -196,7 +196,13 @@ const normalizeHost = (host: string): string => {
   return h;
 };
 
-// Base API call
+// CORS proxy for mixed content issues (HTTPS page -> HTTP API)
+const CORS_PROXIES = [
+  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+];
+
+// Base API call with CORS proxy fallback
 const apiCall = async (creds: XtreamCredentials, params: Record<string, string> = {}) => {
   const host = normalizeHost(creds.host);
   const url = new URL(`${host}/player_api.php`);
@@ -204,9 +210,30 @@ const apiCall = async (creds: XtreamCredentials, params: Record<string, string> 
   url.searchParams.set('password', creds.password);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
   
-  const res = await fetch(url.toString());
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
-  return res.json();
+  const targetUrl = url.toString();
+  
+  // Try direct first
+  try {
+    const res = await fetch(targetUrl, { signal: AbortSignal.timeout(8000) });
+    if (res.ok) return res.json();
+  } catch {
+    // Direct failed (likely CORS/mixed content), try proxies
+  }
+
+  // Try CORS proxies
+  for (const proxy of CORS_PROXIES) {
+    try {
+      const res = await fetch(proxy(targetUrl), { signal: AbortSignal.timeout(12000) });
+      if (res.ok) {
+        const text = await res.text();
+        return JSON.parse(text);
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  throw new Error('Sunucuya bağlanılamadı. CORS veya ağ hatası.');
 };
 
 // Auth & info
