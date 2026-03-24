@@ -29,13 +29,21 @@ const SettingsPage = () => {
   const deviceId = 'PTV-2024-' + (activeProfile?.id || 'GUEST').toUpperCase().slice(0, 8);
   const accountExpiry = '2026-09-24';
 
+  const [notifNewContent, setNotifNewContent] = useState(true);
+  const [notifUpdates, setNotifUpdates] = useState(true);
+  const [notifRecommendations, setNotifRecommendations] = useState(false);
+  const [dataUsage] = useState({ cached: '247 MB', downloads: '1.2 GB', total: '1.45 GB' });
+
   const tabs: { id: SettingsTab; icon: typeof User; label: string }[] = [
     { id: 'account', icon: User, label: language === 'tr' ? 'Hesap Bilgileri' : 'Account Info' },
     { id: 'parental', icon: Shield, label: language === 'tr' ? 'Ebeveyn Kontrolü' : 'Parental Control' },
     { id: 'player', icon: Monitor, label: language === 'tr' ? 'Player Ayarları' : 'Player Settings' },
     { id: 'theme', icon: Palette, label: language === 'tr' ? 'Tema' : 'Theme' },
+    { id: 'notifications', icon: Bell, label: language === 'tr' ? 'Bildirimler' : 'Notifications' },
     { id: 'history', icon: History, label: language === 'tr' ? 'İzleme Geçmişi' : 'Watch History' },
+    { id: 'storage', icon: HardDrive, label: language === 'tr' ? 'Depolama' : 'Storage' },
     { id: 'device', icon: Wifi, label: language === 'tr' ? 'Cihaz Bilgileri' : 'Device Info' },
+    { id: 'about', icon: Info, label: language === 'tr' ? 'Hakkında' : 'About' },
   ];
 
   const handlePinSave = () => {
