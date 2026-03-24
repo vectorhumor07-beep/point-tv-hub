@@ -19,9 +19,9 @@ const Header = () => {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-border/50">
-      <div className="flex items-center justify-between px-6 py-3">
-        <Link to="/" className="flex items-center gap-2">
-          <img src={pointtvLogo} alt="Point TV" className="h-10 w-auto rounded" />
+      <div className="flex items-center justify-between px-6 py-2">
+        <Link to="/" className="flex items-center gap-3 flex-shrink-0">
+          <img src={pointtvLogo} alt="Point TV" className="h-14 w-auto rounded-lg shadow-lg" />
         </Link>
 
         <nav className="hidden md:flex items-center gap-1">
@@ -55,7 +55,7 @@ const Header = () => {
           </Link>
 
           <Link to="/profiles" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-lg">
+            <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center text-lg ring-2 ring-primary/30">
               {activeProfile?.avatar || '👤'}
             </div>
           </Link>
