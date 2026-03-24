@@ -44,11 +44,7 @@ const MoviesPage = () => {
       : movies;
 
   if (loading) {
-    return (
-      <div className="min-h-screen pt-20 flex items-center justify-center">
-        <Loader2 className="w-10 h-10 text-primary animate-spin" />
-      </div>
-    );
+    return <BufferingScreen loading={loading} type="movie" />;
   }
 
   return (
