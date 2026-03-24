@@ -14,32 +14,11 @@ const LiveTVPage = () => {
   const [activeCategory, setActiveCategory] = useState<ChannelCategory | 'all'>('all');
 
   const allChannels = getChannels();
-  const allEpg = getEPG();
   const channels = kidsMode
     ? allChannels.filter(c => c.category === 'kids')
     : activeCategory === 'all'
     ? allChannels
     : allChannels.filter(c => c.category === activeCategory);
-
-  const now = new Date();
-
-  const selectedChannelData = allChannels.find(c => c.id === selectedChannel);
-  const selectedChannelEpg = useMemo(() => {
-    if (!selectedChannel) return [];
-    return allEpg
-      .filter(e => e.channelId === selectedChannel)
-      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
-  }, [selectedChannel, allEpg]);
-
-  const handleChannelClick = (channelId: string) => {
-    setSelectedChannel(channelId);
-    setEpgOpen(true);
-  };
-
-  const formatTime = (iso: string) => {
-    const d = new Date(iso);
-    return d.toLocaleTimeString(language === 'tr' ? 'tr-TR' : 'en-US', { hour: '2-digit', minute: '2-digit' });
-  };
 
   return (
     <div className="min-h-screen pt-20 pb-8 px-6 flex">
